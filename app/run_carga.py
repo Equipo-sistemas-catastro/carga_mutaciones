@@ -1,6 +1,7 @@
 from app.db.session import SessionLocal
 from app.services.cargar_txt import procesar_archivos_mutaciones
 
+#main
 def main():
     db = SessionLocal()
     try:
