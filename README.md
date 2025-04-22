@@ -10,7 +10,7 @@ Este proyecto está desarrollado con **Python** y **FastAPI**, y forma parte de 
 - Validación de datos con Pydantic.
 - Pruebas automáticas con `pytest`.
 
-## 🧱 Estructura del proyecto
+## 🧱 Estructura del proyecto 1
 
 carga_mutaciones/
 │
