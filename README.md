@@ -12,8 +12,8 @@ Este proyecto está desarrollado con **Python** y **FastAPI**, y forma parte de 
 
 ## Variables de entorno
 
-PG_USER
-PG_PASSWORD
+- PG_USER
+- PG_PASSWORD
 PG_HOST
 PG_DB
 PG_PORT
