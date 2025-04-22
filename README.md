@@ -10,6 +10,19 @@ Este proyecto está desarrollado con **Python** y **FastAPI**, y forma parte de 
 - Validación de datos con Pydantic.
 - Pruebas automáticas con `pytest`.
 
+## Variables de entorno
+
+PG_USER
+PG_PASSWORD
+PG_HOST
+PG_DB
+PG_PORT
+PG_SCHEMA
+CARPETA_ORIGEN_MUTACIONES
+CARPETA_EXITOSO_MUTACIONES
+CARPETA_FALLIDO_MUTACIONES
+
+
 ## 🧱 Estructura del proyecto 1
 
 carga_mutaciones/
