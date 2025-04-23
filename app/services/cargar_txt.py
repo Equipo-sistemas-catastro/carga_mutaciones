@@ -73,6 +73,10 @@ def procesar_archivos_mutaciones(db: Session):
 
             db.bulk_save_objects(registros)
             db.commit()
+
+            # 🔄 Refrescar la vista materializada
+            #db.execute("REFRESH MATERIALIZED VIEW vista_compara_mutaciones;")
+            #db.commit()
             
             shutil.move(ruta_completa, os.path.join(CARPETA_EXITOSO, archivo))
             crear_log_carga(db, LogCargaPlanoMutacionCreate(
