@@ -134,3 +134,13 @@ FROM public.naturaleza_juridica nj
 JOIN public.planos_turnos_mutaciones ptm ON nj.id_naturaleza = ptm.cod_naturaleza_juridica
 
 
+---------------------------------------------------
+--QUERY PARA HACER EL JOIN ENTRE LA TABLA DE POSTGRES
+--POR EL CÓDIGO DE MATRÍCULA 
+--(TOMA EN CUENTA SOLO LEER DEL CAMPO id_matricula LOS 
+--CARACTERES DESPUÉS DE "-")
+---------------------------------------------------
+SELECT *
+FROM planos_turnos_mutaciones p
+JOIN zcatt_compravts z
+  ON split_part(p.id_matricula, '-', 2) = z.id_matricula2;
