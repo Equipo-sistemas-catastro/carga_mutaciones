@@ -1,0 +1,136 @@
+--------------------------------------------------------
+--CREA TABLA DE CARGA PLANO
+--------------------------------------------------------
+DROP TABLE IF EXISTS planos_turnos_mutaciones;
+CREATE TABLE planos_turnos_mutaciones (
+    id_tabla SERIAL PRIMARY KEY,
+    id_radicacion TEXT,
+	id_zre TEXT,
+	id_1 TEXT,
+	id_2 TEXT,
+	id_matricula TEXT,
+	cod_catastral TEXT,
+	cod_naturaleza_juridica TEXT,
+	naturaleza_juridica TEXT,
+	mes INT,
+	ano INT,
+	fecha_procesado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_mes ON planos_turnos_mutaciones(mes);
+CREATE INDEX idx_ano ON planos_turnos_mutaciones(ano);
+CREATE INDEX idx_cod_naturaleza_juridica ON planos_turnos_mutaciones(cod_naturaleza_juridica);
+CREATE INDEX idx_fecha_procesado ON planos_turnos_mutaciones(fecha_procesado);
+
+--------------------------------------------------------
+--CREA TABLA LOG DE CARGA
+--------------------------------------------------------
+DROP TABLE IF EXISTS log_cargaplano_mutaciones;
+CREATE TABLE log_cargaplano_mutaciones (
+    id_log SERIAL PRIMARY KEY,
+    nombre_archivo TEXT NOT NULL,
+    ruta_archivo TEXT,
+    registros_leidos TEXT,  --INTEGER DEFAULT 0,
+	estado INT,
+    mensaje_error TEXT,
+    fecha_registro_log TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_log_nombre_archivo ON log_cargaplano_mutaciones(nombre_archivo);
+CREATE INDEX idx_log_fecha_registro_log ON log_cargaplano_mutaciones(fecha_registro_log);
+CREATE INDEX idx_log_estado ON log_cargaplano_mutaciones(estado);
+
+--------------------------------------------------------
+
+SELECT * FROM public.planos_turnos_mutaciones
+WHERE cod_naturaleza_juridica = '360'
+order by ano, mes
+where id_matricula like '%282459%'
+WHERE cod_naturaleza_juridica = 150
+--OJO: Hay naturalezas jurídicas con el mismo código y nombre diferente
+
+SELECT * FROM public.log_cargaplano_mutaciones
+
+
+---------------------------------------------------
+-- DUPLICA LA TABLA DE CARGA DE PLANOS PARA RESPALDO
+---------------------------------------------------
+CREATE TABLE planos_turnos_mutaciones_BKP (LIKE planos_turnos_mutaciones INCLUDING ALL);
+
+INSERT INTO planos_turnos_mutaciones_BKP
+SELECT * FROM planos_turnos_mutaciones;
+
+
+---------------------------------------------------
+--CREA TABLA MAESTRA
+---------------------------------------------------
+DROP TABLE IF EXISTS naturaleza_juridica;
+CREATE TABLE public.naturaleza_juridica
+(
+    id_tabla serial NOT NULL,
+	id_naturaleza text,
+    nm_naturaleza text,
+    PRIMARY KEY (id_tabla)
+);
+CREATE INDEX idx_id_naturaleza ON naturaleza_juridica(id_naturaleza);
+
+
+---------------------------------------------------
+
+---------------------------------------------------
+-- DUPLICA LA TABLA MAESTRA naturaleza_juridica PARA RESPALDO
+---------------------------------------------------
+CREATE TABLE naturaleza_juridica_BKP (LIKE naturaleza_juridica INCLUDING ALL);
+
+INSERT INTO naturaleza_juridica_BKP
+SELECT * FROM naturaleza_juridica;
+
+---------------------------------------------------
+--VALIDACION DE CALIDAD DE DATA ANTES DE INSERTAR EN LA MAESTRA
+---------------------------------------------------
+SELECT DISTINCT cod_naturaleza_juridica, naturaleza_juridica
+FROM public.planos_turnos_mutaciones
+ORDER BY cod_naturaleza_juridica;
+
+SELECT * FROM public.planos_turnos_mutaciones
+WHERE cod_naturaleza_juridica = '0168'
+
+UPDATE public.planos_turnos_mutaciones 
+SET naturaleza_juridica = 'TRANSFERENCIA DE DOMINIO A TITUULO DE LEASING HABITACIONAL DE VIVIENDA FAMILIAR'
+WHERE naturaleza_juridica = 'TRANSFERENCIA DE DOMINO A TITULO DE LEASING HABITACIONAL DE VIEVIENDA NO FAMILIAR'
+
+---------------------------------------------------
+--INSERTA LAS DATOS ÚNICOS DE LA TABLA DETALLE A LA MAESTRA
+---------------------------------------------------
+INSERT INTO public.naturaleza_juridica (id_naturaleza, nm_naturaleza)
+SELECT DISTINCT cod_naturaleza_juridica, naturaleza_juridica
+FROM public.planos_turnos_mutaciones
+ORDER BY cod_naturaleza_juridica;
+
+---------------------------------------------------
+
+SELECT * FROM public.naturaleza_juridica 
+ORDER BY id_naturaleza
+
+---------------------------------------------------
+--CREA LA LLAVE FORÁNEA EN EL NUEV0 CAMPO DE LA TABLA DETALLE
+---------------------------------------------------
+ALTER TABLE IF EXISTS public.planos_turnos_mutaciones
+    ADD CONSTRAINT fk_cod_naturaleza FOREIGN KEY (cod_naturaleza_juridica)
+    REFERENCES public.naturaleza_juridica (id_naturaleza) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+---------------------------------------------------
+--ELIMINA LA COLUMNA NO NORMALIZADA DE LA TABLA DETALLE
+---------------------------------------------------
+ALTER TABLE public.planos_turnos_mutaciones DROP COLUMN naturaleza_juridica;
+
+
+
+--VALIDAR CONSULTA
+SELECT nj.id_naturaleza, nj.nm_naturaleza, ptm.*
+FROM public.naturaleza_juridica nj
+JOIN public.planos_turnos_mutaciones ptm ON nj.id_naturaleza = ptm.cod_naturaleza_juridica
+
+
