@@ -1,16 +1,7 @@
-# run_carga.py
-
-import os
-from dotenv import load_dotenv
-
-# Cargar .env antes de importar cualquier cosa que dependa de variables de entorno
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(dotenv_path)
-
 from app.db.session import SessionLocal
 from app.services.cargar_txt import procesar_archivos_mutaciones
 
-# Main
+#main
 def main():
     db = SessionLocal()
     try:
