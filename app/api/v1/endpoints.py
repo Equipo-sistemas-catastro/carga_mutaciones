@@ -13,7 +13,8 @@ from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 
 router = APIRouter()
 
-@router.get("/cargamutaciones/", response_model=CustomPage[PlanoTurnoMutacionOut])
+#@router.get("/cargamutaciones/", response_model=CustomPage[PlanoTurnoMutacionOut])
+@router.get("/consulta_mutaciones/", response_model=CustomPage[PlanoTurnoMutacionOut])
 def obtener_mutaciones(
     ano: Optional[int] = Query(None, description="Filtrar por año"),
     mes: Optional[int] = Query(None, description="Filtrar por mes"),

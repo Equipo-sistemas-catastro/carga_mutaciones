@@ -144,3 +144,17 @@ SELECT *
 FROM planos_turnos_mutaciones p
 JOIN zcatt_compravts z
   ON split_part(p.id_matricula, '-', 2) = z.id_matricula2;
+
+
+  ---------------------------------------------------
+--CREA UNA VISTA MATERIALIZADA PARA QUE SEA CONSULTADA
+--POR LA API DE PYTHON consulta_mutaciones
+---------------------------------------------------
+CREATE MATERIALIZED VIEW vista_compara_mutaciones AS
+SELECT *
+FROM planos_turnos_mutaciones p
+JOIN zcatt_compravts z
+  ON split_part(p.id_matricula, '-', 2) = z.id_matricula2;
+
+--SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO 
+REFRESH MATERIALIZED VIEW vista_compara_mutaciones;
