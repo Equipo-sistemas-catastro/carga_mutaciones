@@ -15,12 +15,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.db.session import SessionLocal
 from sqlalchemy import text
 
+# Conexión a la base de datos.
 def test_db_connection():
     try:
         db = SessionLocal()
         result = db.execute(text("SELECT 1;"))
         assert result.scalar() == 1
-        print("✅ Conexión a la base de datos exitosa.")
+        print("✅ Conexión a la base de datos exitosa luego de ejecutar el test.")
     except Exception as e:
         print("❌ Fallo de conexión.")
         pytest.fail(f"No se pudo conectar a la base de datos: {e}")
