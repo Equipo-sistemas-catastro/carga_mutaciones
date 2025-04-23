@@ -1,1 +1,0 @@
-print("Esta pagina es de prueba para los querys")
