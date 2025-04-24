@@ -9,12 +9,13 @@ class PlanoTurnoMutacionBase(BaseModel):
     id_zre: str
     id_1: str
     id_2: str
-    id_matricula: str
+    id_matricula: int
     cod_catastral: str
     cod_naturaleza_juridica: str
     naturaleza_juridica: str
     mes: int
-    ano: int
+    anio: int
+    fecha_calculada: datetime
 
 
 class PlanoTurnoMutacionCreate(PlanoTurnoMutacionBase):
