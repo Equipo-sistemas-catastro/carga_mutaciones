@@ -1,5 +1,7 @@
 import os
 import shutil
+import calendar
+from datetime import datetime
 from typing import List
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -13,12 +15,12 @@ CARPETA_ORIGEN = settings.CARPETA_ORIGEN_MUTACIONES
 CARPETA_EXITOSO = settings.CARPETA_EXITOSO_MUTACIONES
 CARPETA_FALLIDO = settings.CARPETA_FALLIDO_MUTACIONES
 
-def extraer_mes_ano(nombre_archivo: str):
+def extraer_mes_anio(nombre_archivo: str):
     sin_ext = os.path.splitext(nombre_archivo)[0]  # quita ".txt"
     partes = sin_ext.split('_')
     fecha_str = partes[-1]  # obtiene la parte "01-2024"
-    mes_str, ano_str = fecha_str.split('-')
-    return int(mes_str), int(ano_str)
+    mes_str, anio_str = fecha_str.split('-')
+    return int(mes_str), int(anio_str)
 
 def procesar_archivos_mutaciones(db: Session):
     archivos = [f for f in os.listdir(CARPETA_ORIGEN) if f.endswith(".txt")]
@@ -48,10 +50,11 @@ def procesar_archivos_mutaciones(db: Session):
             with open(ruta_completa, encoding="utf-8") as f:
                 lineas = f.readlines()[3:]  # Omitir las primeras 3 líneas
 
-            mes, ano = extraer_mes_ano(archivo)
+            mes, anio = extraer_mes_anio(archivo)
             #registros_creados = 0
             registros = []
 
+            """
             for linea in lineas:
                 campos = {
                     "id_radicacion": linea[0:15].strip(),
@@ -66,6 +69,28 @@ def procesar_archivos_mutaciones(db: Session):
                 campos["naturaleza_juridica"] = split_nat[1].strip() if len(split_nat) > 1 else ""
                 campos["mes"] = mes
                 campos["ano"] = ano
+                """
+            
+            for linea in lineas:
+                campos = {
+                    "id_radicacion": linea[0:15].strip(),
+                    "id_zre": linea[16:22].strip(),
+                    "id_1": linea[23:26].strip(),
+                    "id_2": linea[27:29].strip(),
+                }
+                split_matricula = linea[30:45].split('-', 1)
+                campos["id_matricula"] = split_matricula[1].strip() if len(split_matricula) > 1 else ""
+                campos["cod_catastral"] = linea[46:76].strip()
+                split_nat = linea[77:398].split('-', 1)
+                campos["cod_naturaleza_juridica"] = split_nat[0].strip()
+                campos["naturaleza_juridica"] = split_nat[1].strip() if len(split_nat) > 1 else ""
+                campos["mes"] = mes
+                campos["anio"] = anio
+
+                # Calcular último día del mes
+                ultimo_dia = calendar.monthrange(int(anio), int(mes))[1]
+                fecha_calculada = datetime(int(anio), int(mes), ultimo_dia).date()
+                campos["fecha_calculada"] = fecha_calculada
 
                 #crear_plano_turno_mutacion(db, PlanoTurnoMutacionCreate(**campos))
                 #registros_creados += 1

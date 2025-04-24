@@ -12,10 +12,10 @@ def crear_plano_turno_mutacion(db: Session, datos: PlanoTurnoMutacionCreate) -> 
     db.refresh(nuevo_registro)
     return nuevo_registro
 
-def obtener_planos_por_mes_ano(db: Session, mes: int, ano: int):
+def obtener_planos_por_mes_anio(db: Session, mes: int, anio: int):
     return db.query(PlanoTurnoMutacion).filter(
         PlanoTurnoMutacion.mes == mes,
-        PlanoTurnoMutacion.ano == ano
+        PlanoTurnoMutacion.anio == anio
     ).all()
 
 def crear_log_carga(db: Session, log_data: LogCargaPlanoMutacionCreate) -> LogCargaPlanoMutacion:

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, Date, TIMESTAMP, func
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 
@@ -12,12 +12,13 @@ class PlanoTurnoMutacion(Base):
     id_zre = Column(Text)
     id_1 = Column(Text)
     id_2 = Column(Text)
-    id_matricula = Column(Text)
+    id_matricula = Column(Integer)
     cod_catastral = Column(Text)
     cod_naturaleza_juridica = Column(Text)
     naturaleza_juridica = Column(Text)
     mes = Column(Integer, index=True)
-    ano = Column(Integer, index=True)
+    anio = Column(Integer, index=True)
+    fecha_calculada = Column(Date)
     fecha_procesado = Column(TIMESTAMP, server_default=func.current_timestamp(), index=True)
 
 

@@ -16,7 +16,7 @@ router = APIRouter()
 #@router.get("/cargamutaciones/", response_model=CustomPage[PlanoTurnoMutacionOut])
 @router.get("/consulta_mutaciones/", response_model=CustomPage[PlanoTurnoMutacionOut])
 def obtener_mutaciones(
-    ano: Optional[int] = Query(None, description="Filtrar por año"),
+    anio: Optional[int] = Query(None, description="Filtrar por año"),
     mes: Optional[int] = Query(None, description="Filtrar por mes"),
     cod_naturaleza: Optional[str] = Query(None, description="Filtrar por código de naturaleza jurídica"),
     order: Optional[str] = Query("asc", pattern="^(asc|desc)$", description="Orden por año y mes"),
@@ -25,16 +25,16 @@ def obtener_mutaciones(
 ):
     query = db.query(PlanoTurnoMutacion)
 
-    if ano:
-        query = query.filter(PlanoTurnoMutacion.ano == ano)
+    if anio:
+        query = query.filter(PlanoTurnoMutacion.anio == anio)
     if mes:
         query = query.filter(PlanoTurnoMutacion.mes == mes)
     if cod_naturaleza:
         query = query.filter(PlanoTurnoMutacion.cod_naturaleza_juridica == cod_naturaleza)
 
     if order == "asc":
-        query = query.order_by(PlanoTurnoMutacion.ano.asc(), PlanoTurnoMutacion.mes.asc())
+        query = query.order_by(PlanoTurnoMutacion.anio.asc(), PlanoTurnoMutacion.mes.asc())
     else:
-        query = query.order_by(PlanoTurnoMutacion.ano.desc(), PlanoTurnoMutacion.mes.desc())
+        query = query.order_by(PlanoTurnoMutacion.anio.desc(), PlanoTurnoMutacion.mes.desc())
 
     return sqlalchemy_paginate(query, params)
