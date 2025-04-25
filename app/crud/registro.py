@@ -1,9 +1,45 @@
 from sqlalchemy.orm import Session
-from app.models.registro import PlanoTurnoMutacion, LogCargaPlanoMutacion
+from sqlalchemy import asc, desc
+from typing import List, Optional, Tuple
+from datetime import date
+
+from app.models.registro import PlanoTurnoMutacion, LogCargaPlanoMutacion,VWComparaMutaciones
 from app.schemas.registro import (
     PlanoTurnoMutacionCreate,
     LogCargaPlanoMutacionCreate
 )
+
+def get_compara_mutaciones(
+    db: Session,
+    skip: int = 0,
+    limit: int = 10,
+    order: str = "asc",
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    cod_matricula: Optional[int] = None,
+    cod_naturaleza_juridica: Optional[str] = None,
+    naturaleza_juridica: Optional[str] = None,
+) -> Tuple[int, List[VWComparaMutaciones]]:
+
+    query = db.query(VWComparaMutaciones)
+
+    if fecha_desde:
+        query = query.filter(VWComparaMutaciones.max_fecha_plano >= fecha_desde)
+    if fecha_hasta:
+        query = query.filter(VWComparaMutaciones.max_fecha_plano <= fecha_hasta)
+    if cod_matricula:
+        query = query.filter(VWComparaMutaciones.cod_matricula == cod_matricula)
+    if cod_naturaleza_juridica:
+        query = query.filter(VWComparaMutaciones.cod_naturaleza_juridica == cod_naturaleza_juridica)
+    if naturaleza_juridica:
+        query = query.filter(VWComparaMutaciones.naturaleza_juridica == naturaleza_juridica)
+
+    total = query.count()
+
+    ordering = asc(VWComparaMutaciones.max_fecha_plano) if order == "asc" else desc(VWComparaMutaciones.max_fecha_plano)
+    items = query.order_by(ordering).offset(skip).limit(limit).all()
+
+    return total, items
 
 def crear_plano_turno_mutacion(db: Session, datos: PlanoTurnoMutacionCreate) -> PlanoTurnoMutacion:
     nuevo_registro = PlanoTurnoMutacion(**datos.model_dump())

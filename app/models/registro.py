@@ -4,6 +4,19 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+class VWComparaMutaciones(Base):
+    __tablename__ = "vw_compara_mutaciones"
+    __table_args__ = {"extend_existing": True}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(String)
+    cod_naturaleza_juridica = Column(String)
+    naturaleza_juridica = Column(String)
+    anio = Column(Integer)
+    mes = Column(Integer)
+
 class PlanoTurnoMutacion(Base):
     __tablename__ = "planos_turnos_mutaciones"
 

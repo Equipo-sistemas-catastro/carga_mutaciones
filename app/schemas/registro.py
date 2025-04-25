@@ -1,8 +1,27 @@
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
+from datetime import datetime, date
 
+
+class VWComparaMutacionesBase(BaseModel):
+    cod_matricula: int
+    max_fecha_plano: Optional[date]
+    max_fecha_sap: Optional[date]
+    id_zre: Optional[str]
+    cod_naturaleza_juridica: Optional[str]
+    naturaleza_juridica: Optional[str]
+    anio: Optional[int]
+    mes: Optional[int]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class PaginatedComparaMutaciones(BaseModel):
+    total: int
+    page: int
+    size: int
+    pages: int
+    items: List[VWComparaMutacionesBase]
 
 class PlanoTurnoMutacionBase(BaseModel):
     id_radicacion: str
