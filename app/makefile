@@ -26,3 +26,7 @@ env:
 # Ejecutar carga de archivos .txt desde carpeta
 cargar_txt:
 	$(VENV) && python -c "from app.run_carga import main; main()"
+
+# Ejecutar archivo principal run_carga.py
+run_carga:
+	$(VENV) python -m app.run_carga
