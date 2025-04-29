@@ -8,18 +8,21 @@ CREATE TABLE planos_turnos_mutaciones (
 	id_zre TEXT,
 	id_1 TEXT,
 	id_2 TEXT,
-	id_matricula TEXT,
+	id_matricula INT,
 	cod_catastral TEXT,
 	cod_naturaleza_juridica TEXT,
 	naturaleza_juridica TEXT,
 	mes INT,
-	ano INT,
+	anio INT,
+	fecha_calculada date,
 	fecha_procesado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_mes ON planos_turnos_mutaciones(mes);
-CREATE INDEX idx_ano ON planos_turnos_mutaciones(ano);
+CREATE INDEX idx_anio ON planos_turnos_mutaciones(anio);
+CREATE INDEX idx_anio_mes ON planos_turnos_mutaciones(anio, mes);
 CREATE INDEX idx_cod_naturaleza_juridica ON planos_turnos_mutaciones(cod_naturaleza_juridica);
-CREATE INDEX idx_fecha_procesado ON planos_turnos_mutaciones(fecha_procesado);
+CREATE INDEX idx_fecha_calculada ON planos_turnos_mutaciones(fecha_calculada);
+CREATE INDEX idx_matricula_plano ON planos_turnos_mutaciones(id_matricula);
 
 --------------------------------------------------------
 --CREA TABLA LOG DE CARGA
@@ -58,6 +61,7 @@ CREATE TABLE planos_turnos_mutaciones_BKP (LIKE planos_turnos_mutaciones INCLUDI
 INSERT INTO planos_turnos_mutaciones_BKP
 SELECT * FROM planos_turnos_mutaciones;
 
+SELECT * FROM planos_turnos_mutaciones_BKP;
 
 ---------------------------------------------------
 --CREA TABLA MAESTRA
@@ -120,7 +124,6 @@ ALTER TABLE IF EXISTS public.planos_turnos_mutaciones
     ON DELETE NO ACTION
     NOT VALID;
 
-
 ---------------------------------------------------
 --ELIMINA LA COLUMNA NO NORMALIZADA DE LA TABLA DETALLE
 ---------------------------------------------------
@@ -134,27 +137,82 @@ FROM public.naturaleza_juridica nj
 JOIN public.planos_turnos_mutaciones ptm ON nj.id_naturaleza = ptm.cod_naturaleza_juridica
 
 
----------------------------------------------------
---QUERY PARA HACER EL JOIN ENTRE LA TABLA DE POSTGRES
---POR EL CÓDIGO DE MATRÍCULA 
---(TOMA EN CUENTA SOLO LEER DEL CAMPO id_matricula LOS 
---CARACTERES DESPUÉS DE "-")
----------------------------------------------------
-SELECT *
-FROM planos_turnos_mutaciones p
-JOIN zcatt_compravts z
-  ON split_part(p.id_matricula, '-', 2) = z.id_matricula2;
 
 
-  ---------------------------------------------------
+---------------------------------------------------
 --CREA UNA VISTA MATERIALIZADA PARA QUE SEA CONSULTADA
 --POR LA API DE PYTHON consulta_mutaciones
 ---------------------------------------------------
-CREATE MATERIALIZED VIEW vista_compara_mutaciones AS
-SELECT *
-FROM planos_turnos_mutaciones p
-JOIN zcatt_compravts z
-  ON split_part(p.id_matricula, '-', 2) = z.id_matricula2;
+--QUERY PARA HACER EL JOIN ENTRE LA TABLA DE POSTGRES 
+--DE LOS PLANOS y SAP POR EL CÓDIGO DE MATRÍCULA 
+-- TRAE LAS MATRICULAS DE LA TABLA DE LOS PLANOS
+-- QUE TIENEN FECHA MAYOR A LA DE SAP zcatt_compravts
+---------------------------------------------------
+---------------------------------------------------
+CREATE MATERIALIZED VIEW vw_compara_mutaciones AS
+WITH ultimos_planos AS (
+    SELECT DISTINCT ON (id_matricula)
+        id_zre,
+        id_matricula,
+        cod_naturaleza_juridica,
+        naturaleza_juridica,
+        fecha_calculada,
+		anio,
+		mes
+    FROM planos_turnos_mutaciones
+    WHERE id_matricula IS NOT NULL
+    ORDER BY id_matricula, fecha_calculada DESC
+),
+ultimas_compraventas AS (
+    SELECT DISTINCT ON (nm_matricula_pdi)
+        nm_matricula_pdi,
+        fc_mutacion
+    FROM zcatt_compravtas
+    WHERE nm_matricula_pdi IS NOT NULL
+    ORDER BY nm_matricula_pdi, fc_mutacion DESC
+)
+SELECT
+    p.id_matricula as cod_matricula,
+	p.fecha_calculada as max_fecha_plano,
+    z.fc_mutacion as max_fecha_SAP,
+	p.id_zre,
+    p.cod_naturaleza_juridica,
+    p.naturaleza_juridica,
+	p.anio,
+	p.mes
+FROM ultimos_planos p
+JOIN ultimas_compraventas z
+    ON p.id_matricula = z.nm_matricula_pdi
+WHERE p.fecha_calculada > z.fc_mutacion
+ORDER BY p.id_matricula;
+
+
+-- Índice por id_matricula
+CREATE UNIQUE INDEX vw_compara_mutaciones_uidx
+ON vw_compara_mutaciones (cod_matricula);
+
+
+select * from public.vw_compara_mutaciones
+
 
 --SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO 
-REFRESH MATERIALIZED VIEW vista_compara_mutaciones;
+REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
+
+
+
+SELECT * FROM zcatt_compravtas
+where nm_matricula_pdi = 220
+
+SELECT * FROM planos_turnos_mutaciones
+where id_matricula = 220
+
+
+SELECT vw_compara_mutaciones.cod_matricula AS vw_compara_mutaciones_cod_matricula, 
+vw_compara_mutaciones.max_fecha_plano AS vw_compara_mutaciones_max_fecha_plano, 
+vw_compara_mutaciones."max_fecha_SAP" AS "vw_compara_mutaciones_max_fecha_SAP", 
+vw_compara_mutaciones.id_zre AS vw_compara_mutaciones_id_zre, 
+vw_compara_mutaciones.cod_naturaleza_juridica AS vw_compara_mutaciones_cod_naturaleza_juridica, 
+vw_compara_mutaciones.naturaleza_juridica AS vw_compara_mutaciones_naturaleza_juridica, 
+vw_compara_mutaciones.anio AS vw_compara_mutaciones_anio, 
+vw_compara_mutaciones.mes AS vw_compara_mutaciones_mes
+FROM vw_compara_mutaciones ORDER BY vw_compara_mutaciones.max_fecha_plano ASC
