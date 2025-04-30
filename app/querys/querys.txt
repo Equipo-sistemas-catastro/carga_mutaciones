@@ -192,19 +192,19 @@ CREATE UNIQUE INDEX vw_compara_mutaciones_uidx
 ON vw_compara_mutaciones (cod_matricula);
 
 
-select * from public.vw_compara_mutaciones
-
 
 --SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO 
 REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
 
 
+select * from public.vw_compara_mutaciones
+
 
 SELECT * FROM zcatt_compravtas
-where nm_matricula_pdi = 220
+where nm_matricula_pdi = 220;
 
 SELECT * FROM planos_turnos_mutaciones
-where id_matricula = 220
+where id_matricula = 220;
 
 
 SELECT vw_compara_mutaciones.cod_matricula AS vw_compara_mutaciones_cod_matricula, 
