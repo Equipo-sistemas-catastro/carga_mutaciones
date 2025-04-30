@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Header, HTTPException, Security
+from app.core.security import validate_api_key
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import date
@@ -16,6 +17,8 @@ from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 
 router = APIRouter()
 
+# 👇 Llamado de la API con token de seguridad
+#@router.get("/consulta_cruce_mutaciones", response_model=PaginatedComparaMutaciones, dependencies=[Depends(validate_api_key)])
 @router.get("/consulta_cruce_mutaciones", response_model=PaginatedComparaMutaciones)
 def consultar_compara_mutaciones(
     skip: int = 0,
@@ -77,3 +80,4 @@ def obtener_mutaciones(
         query = query.order_by(PlanoTurnoMutacion.anio.desc(), PlanoTurnoMutacion.mes.desc())
 
     return sqlalchemy_paginate(query, params)
+

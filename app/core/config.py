@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     PG_DB: str
     PG_PORT: str
     PG_SCHEMA: str
+    
+    api_key: str
 
     CARPETA_ORIGEN_MUTACIONES: str
     CARPETA_EXITOSO_MUTACIONES: str

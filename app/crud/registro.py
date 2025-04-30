@@ -65,3 +65,5 @@ def obtener_logs_por_estado(db: Session, estado: int):
     return db.query(LogCargaPlanoMutacion).filter(
         LogCargaPlanoMutacion.estado == estado
     ).all()
+
+
