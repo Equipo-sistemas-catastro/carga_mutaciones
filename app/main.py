@@ -1,15 +1,23 @@
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
+from fastapi.responses import FileResponse
 from app.api.v1 import endpoints
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.openapi.models import APIKey, APIKeyIn, SecuritySchemeType
 from fastapi.openapi.utils import get_openapi
+import os
 
 app = FastAPI()
 
 
 app.include_router(endpoints.router, prefix="/api/v1")
 add_pagination(app)
+
+#Para llamar el ícono de los endpoints
+@app.get("/favicon.ico")
+async def favicon():
+    file_path = os.path.join(os.path.dirname(__file__), "static", "favicon.ico")
+    return FileResponse(file_path)
 
 """
 # Personaliza el esquema de seguridad para llamar las API
