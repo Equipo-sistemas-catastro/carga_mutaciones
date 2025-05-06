@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import List
 from sqlalchemy.orm import Session
 from datetime import datetime
+from sqlalchemy import text
 
 from app.schemas.registro import PlanoTurnoMutacionCreate, LogCargaPlanoMutacionCreate
 from app.crud.registro import crear_plano_turno_mutacion, crear_log_carga
@@ -100,8 +101,8 @@ def procesar_archivos_mutaciones(db: Session):
             db.commit()
 
             # 🔄 Refrescar la vista materializada
-            #db.execute("REFRESH MATERIALIZED VIEW vista_compara_mutaciones;")
-            #db.commit()
+            db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones;"))
+            db.commit()
             
             shutil.move(ruta_completa, os.path.join(CARPETA_EXITOSO, archivo))
             crear_log_carga(db, LogCargaPlanoMutacionCreate(
