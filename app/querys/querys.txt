@@ -43,6 +43,70 @@ CREATE INDEX idx_log_estado ON log_cargaplano_mutaciones(estado);
 
 --------------------------------------------------------
 
+---------------------------------------------------
+--CREA TABLA MAESTRA
+---------------------------------------------------
+DROP TABLE IF EXISTS naturaleza_juridica;
+CREATE TABLE public.naturaleza_juridica
+(
+    id_tabla serial NOT NULL,
+	id_naturaleza text,
+    nm_naturaleza text,
+    PRIMARY KEY (id_tabla)
+);
+CREATE INDEX idx_id_naturaleza ON naturaleza_juridica(id_naturaleza);
+
+
+---------------------------------------------------
+
+---------------------------------------------------
+--INSERTA LAS DATOS DE NATURALEZA JURIDICA QUE SE NECESITAN ANALIZAR 
+---------------------------------------------------
+INSERT INTO public.naturaleza_juridica (id_naturaleza, nm_naturaleza)
+SELECT DISTINCT ON (cod_naturaleza_juridica) cod_naturaleza_juridica, naturaleza_juridica
+FROM public.planos_turnos_mutaciones
+WHERE cod_naturaleza_juridica IN (
+    '0107','0108','0109','0104','0110','0112','0113','0122',
+    '0124','0125','0138','0139','0140','0141','0144','0146',
+    '0163','0164','0168','0169','0172'
+)
+ORDER BY cod_naturaleza_juridica, naturaleza_juridica;
+
+---------------------------------------------------
+
+
+--------------------------------------------------------
+--CREA TABLA ZCATT (en ambiente desarrollo ya existe)
+--------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.zcatt_compravtas
+(
+    "mandt." character varying(3) COLLATE pg_catalog."default",
+    cd_propietario character varying(20) COLLATE pg_catalog."default",
+    cd_comprador character varying(20) COLLATE pg_catalog."default",
+    fc_mutacion date NOT NULL,
+    hora_mutacion time without time zone NOT NULL,
+    nm_matricula_pdi numeric(9,0),
+    cd_relac_vendedo character varying(1) COLLATE pg_catalog."default",
+    cd_relac_comprad character varying(1) COLLATE pg_catalog."default",
+    porc_compra_vnta numeric(7,3),
+    porc_actual numeric(7,3),
+    cd_mutacion numeric(4,0),
+    nm_escritura numeric(10,0),
+    nm_doc_mutacion character varying(25) COLLATE pg_catalog."default",
+    cd_tipo_document character varying(1) COLLATE pg_catalog."default",
+    vl_compraventa numeric(17,2),
+    usuario character varying(12) COLLATE pg_catalog."default",
+    nm_consecutivo numeric(20,0)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.zcatt_compravtas
+    OWNER to postgres;
+
+---------------------------------------------------
+
 SELECT * FROM public.planos_turnos_mutaciones
 WHERE cod_naturaleza_juridica = '360'
 order by ano, mes
@@ -63,21 +127,6 @@ SELECT * FROM planos_turnos_mutaciones;
 
 SELECT * FROM planos_turnos_mutaciones_BKP;
 
----------------------------------------------------
---CREA TABLA MAESTRA
----------------------------------------------------
-DROP TABLE IF EXISTS naturaleza_juridica;
-CREATE TABLE public.naturaleza_juridica
-(
-    id_tabla serial NOT NULL,
-	id_naturaleza text,
-    nm_naturaleza text,
-    PRIMARY KEY (id_tabla)
-);
-CREATE INDEX idx_id_naturaleza ON naturaleza_juridica(id_naturaleza);
-
-
----------------------------------------------------
 
 ---------------------------------------------------
 -- DUPLICA LA TABLA MAESTRA naturaleza_juridica PARA RESPALDO
@@ -155,6 +204,79 @@ WITH ultimos_planos AS (
         id_zre,
         id_matricula,
         cod_naturaleza_juridica,
+        fecha_calculada,
+        anio,
+        mes
+    FROM planos_turnos_mutaciones
+    WHERE id_matricula IS NOT NULL
+    ORDER BY id_matricula, fecha_calculada DESC
+),
+ultimas_compraventas AS (
+    SELECT DISTINCT ON (nm_matricula_pdi)
+        nm_matricula_pdi,
+        fc_mutacion
+    FROM zcatt_compravtas
+    WHERE nm_matricula_pdi IS NOT NULL
+    ORDER BY nm_matricula_pdi, fc_mutacion DESC
+)
+SELECT
+    p.id_matricula AS cod_matricula,
+    p.fecha_calculada AS max_fecha_plano,
+    z.fc_mutacion AS max_fecha_SAP,
+    p.id_zre,
+    p.cod_naturaleza_juridica,
+    nj.nm_naturaleza AS naturaleza_juridica,
+    p.anio,
+    p.mes
+FROM ultimos_planos p
+JOIN ultimas_compraventas z
+    ON p.id_matricula = z.nm_matricula_pdi
+INNER JOIN naturaleza_juridica nj
+    ON p.cod_naturaleza_juridica = nj.id_naturaleza
+WHERE p.fecha_calculada > z.fc_mutacion
+ORDER BY p.id_matricula;
+
+
+-- Índice por id_matricula
+CREATE UNIQUE INDEX vw_compara_mutaciones_uidx
+ON vw_compara_mutaciones (cod_matricula);
+
+
+
+--SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO 
+REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
+
+
+select * from public.vw_compara_mutaciones
+
+
+SELECT * FROM zcatt_compravtas
+where nm_matricula_pdi = 220;
+
+SELECT * FROM planos_turnos_mutaciones
+--where id_matricula = 220
+WHERE anio = 2025 AND mes = 3
+
+
+SELECT vw_compara_mutaciones.cod_matricula AS vw_compara_mutaciones_cod_matricula, 
+vw_compara_mutaciones.max_fecha_plano AS vw_compara_mutaciones_max_fecha_plano, 
+vw_compara_mutaciones."max_fecha_SAP" AS "vw_compara_mutaciones_max_fecha_SAP", 
+vw_compara_mutaciones.id_zre AS vw_compara_mutaciones_id_zre, 
+vw_compara_mutaciones.cod_naturaleza_juridica AS vw_compara_mutaciones_cod_naturaleza_juridica, 
+vw_compara_mutaciones.naturaleza_juridica AS vw_compara_mutaciones_naturaleza_juridica, 
+vw_compara_mutaciones.anio AS vw_compara_mutaciones_anio, 
+vw_compara_mutaciones.mes AS vw_compara_mutaciones_mes
+FROM vw_compara_mutaciones ORDER BY vw_compara_mutaciones.max_fecha_plano ASC
+
+
+
+--BACKUP DE LA VISTA ORIGINAL 
+CREATE MATERIALIZED VIEW vw_compara_mutaciones AS
+WITH ultimos_planos AS (
+    SELECT DISTINCT ON (id_matricula)
+        id_zre,
+        id_matricula,
+        cod_naturaleza_juridica,
         naturaleza_juridica,
         fecha_calculada,
 		anio,
@@ -185,34 +307,3 @@ JOIN ultimas_compraventas z
     ON p.id_matricula = z.nm_matricula_pdi
 WHERE p.fecha_calculada > z.fc_mutacion
 ORDER BY p.id_matricula;
-
-
--- Índice por id_matricula
-CREATE UNIQUE INDEX vw_compara_mutaciones_uidx
-ON vw_compara_mutaciones (cod_matricula);
-
-
-
---SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO 
-REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
-
-
-select * from public.vw_compara_mutaciones
-
-
-SELECT * FROM zcatt_compravtas
-where nm_matricula_pdi = 220;
-
-SELECT * FROM planos_turnos_mutaciones
-where id_matricula = 220;
-
-
-SELECT vw_compara_mutaciones.cod_matricula AS vw_compara_mutaciones_cod_matricula, 
-vw_compara_mutaciones.max_fecha_plano AS vw_compara_mutaciones_max_fecha_plano, 
-vw_compara_mutaciones."max_fecha_SAP" AS "vw_compara_mutaciones_max_fecha_SAP", 
-vw_compara_mutaciones.id_zre AS vw_compara_mutaciones_id_zre, 
-vw_compara_mutaciones.cod_naturaleza_juridica AS vw_compara_mutaciones_cod_naturaleza_juridica, 
-vw_compara_mutaciones.naturaleza_juridica AS vw_compara_mutaciones_naturaleza_juridica, 
-vw_compara_mutaciones.anio AS vw_compara_mutaciones_anio, 
-vw_compara_mutaciones.mes AS vw_compara_mutaciones_mes
-FROM vw_compara_mutaciones ORDER BY vw_compara_mutaciones.max_fecha_plano ASC
