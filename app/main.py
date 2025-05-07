@@ -5,9 +5,24 @@ from app.api.v1 import endpoints
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.openapi.models import APIKey, APIKeyIn, SecuritySchemeType
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
 import os
 
 app = FastAPI()
+
+cors_origins=settings.cors_origins
+
+# 👇 Configuración de CORS
+origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # puedes usar ["*"] para permitir todos (solo en desarrollo)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(endpoints.router, prefix="/api/v1")

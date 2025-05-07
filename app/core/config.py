@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     
     api_key: str
 
+    cors_origins:str
+
     CARPETA_ORIGEN_MUTACIONES: str
     CARPETA_EXITOSO_MUTACIONES: str
     CARPETA_FALLIDO_MUTACIONES: str
