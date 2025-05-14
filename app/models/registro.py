@@ -7,6 +7,21 @@ Base = declarative_base()
 
 SCHEMA=settings.PG_SCHEMA
 
+class DistribucionMutacion(Base):
+    __tablename__ = "tbl_distri_mutaciones"
+    __table_args__ = {"schema": SCHEMA}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(Text)
+    cod_naturaleza_juridica = Column(Text)
+    naturaleza_juridica = Column(String(100))
+    anio = Column(Integer)
+    mes = Column(Integer)
+    id_usuario = Column(Integer)
+    fecha_distribucion = Column(Date)
+
 class VWComparaMutaciones(Base):
     __tablename__ = "vw_compara_mutaciones"
     __table_args__ = {"schema": SCHEMA}
