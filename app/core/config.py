@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     CARPETA_ORIGEN_MUTACIONES: str
     CARPETA_EXITOSO_MUTACIONES: str
     CARPETA_FALLIDO_MUTACIONES: str
+
+    SMTP_HOST: str
+    SMTP_PORT: str
+    SMTP_USER: str
+    SMTP_PASS: str
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

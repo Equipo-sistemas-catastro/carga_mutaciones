@@ -4,6 +4,27 @@ from typing import Optional, List
 from datetime import datetime, date
 
 
+class DistribucionMutacionOut(BaseModel):
+    cod_matricula: int
+    max_fecha_plano: Optional[date]
+    max_fecha_sap: Optional[date]
+    id_zre: Optional[str]
+    cod_naturaleza_juridica: Optional[str]
+    naturaleza_juridica: Optional[str]
+    anio: Optional[int]
+    mes: Optional[int]
+    id_usuario: int
+    fecha_distribucion: Optional[date]
+
+    class Config:
+        model_config = ConfigDict(from_attributes=True)
+
+class UsuarioInput(BaseModel):
+    id_usuario: int
+
+class UsuarioList(BaseModel):
+    usuarios: List[UsuarioInput]
+
 class VWComparaMutacionesBase(BaseModel):
     cod_matricula: int
     max_fecha_plano: Optional[date]

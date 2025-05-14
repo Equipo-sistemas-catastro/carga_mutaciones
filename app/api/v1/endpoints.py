@@ -3,10 +3,12 @@ from app.core.security import validate_api_key
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import date
+from app.services.distribuir_mutaciones import distribuir_registros
+from app.services.post_distribucion import generar_csvs_y_enviar
 
 from app.db.session import get_db
-from app.models.registro import PlanoTurnoMutacion
-from app.schemas.registro import PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones
+from app.models.registro import PlanoTurnoMutacion, DistribucionMutacion
+from app.schemas.registro import PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones, UsuarioList, DistribucionMutacionOut
 from app.crud.registro import get_compara_mutaciones
 from app.crud import registro
 #from app.schemas.paginacion import CustomParams
@@ -16,6 +18,41 @@ from app.schemas.paginacion import CustomPage, CustomParams
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 
 router = APIRouter()
+
+@router.get("/consulta_distribucion_mutaciones", response_model=CustomPage[DistribucionMutacionOut])
+def consultar_distribucion_mutaciones(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    query = db.query(DistribucionMutacion)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+
+    page = (skip // limit) + 1 if limit else 1
+    pages = (total + limit - 1) // limit if limit else 1
+
+    return {
+        "total": total,
+        "page": page,
+        "size": limit,
+        "pages": pages,
+        "items": items
+    }
+
+# 👇 Llamado al SP de la BD para distribuir las mutaciones a los usuarios
+@router.post("/distribuir_mutaciones")
+def distribuir_mutaciones(payload: UsuarioList):
+    try:
+        id_usuarios = [u.id_usuario for u in payload.usuarios]
+        distribuir_registros(id_usuarios)  # Ejecuta el SP
+        generar_csvs_y_enviar(id_usuarios)  # Genera y envía CSVs
+        return {"msg": "Registros distribuidos y correos enviados correctamente"}
+    except Exception as e:
+        print("ERROR EJECUCIÓN:", e)              # DEBUG CONCRETO
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # 👇 Llamado de la API con token de seguridad
 #@router.get("/consulta_cruce_mutaciones", response_model=PaginatedComparaMutaciones, dependencies=[Depends(validate_api_key)])
