@@ -20,6 +20,7 @@ class DistribucionMutacion(Base):
     anio = Column(Integer)
     mes = Column(Integer)
     id_usuario = Column(Integer)
+    sap_user = Column(Text)
     fecha_distribucion = Column(Date)
 
 class VWComparaMutaciones(Base):
