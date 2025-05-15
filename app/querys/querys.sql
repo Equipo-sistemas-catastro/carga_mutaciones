@@ -44,18 +44,22 @@ CREATE INDEX idx_log_estado ON log_cargaplano_mutaciones(estado);
 
 --------------------------------------------------------
 
+
 --------------------------------------------------------
---CREA TABLA DE USUARIOS
+--CREA TABLA DE USUARIOS (CREAR EL ESQUEMA sis_sugt_auth)
 --------------------------------------------------------
-DROP TABLE IF EXISTS tbl_usuarios;
-CREATE TABLE tbl_usuarios (
-    id_log SERIAL,
-    id_usuario INT PRIMARY KEY,
-    nombre_usuario TEXT NOT NULL,
-    correo_usuario TEXT NOT NULL,
-    perfil_usuario TEXT,
-    fecha_auditoria TIMESTAMP DEFAULT NOW()
-);
+CREATE TABLE IF NOT EXISTS tbl_users
+(
+    id_user uuid NOT NULL,
+    name_user character varying COLLATE pg_catalog."default",
+    email_user character varying COLLATE pg_catalog."default",
+    user_password text COLLATE pg_catalog."default",
+    id_role_user integer,
+    id_programm_user integer,
+    id_dependency_user integer,
+    create_at date,
+    sap_user character varying(100) COLLATE pg_catalog."default"
+)
 
 
 ---------------------------------------------------
@@ -101,11 +105,8 @@ CREATE TABLE IF NOT EXISTS tbl_distri_mutaciones
     anio integer,
     mes integer,
     id_usuario integer NOT NULL,
-    fecha_distribucion date,
-    CONSTRAINT fk_distri_usuarios FOREIGN KEY (id_usuario)
-        REFERENCES tbl_usuarios (id_usuario) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+	sap_user character varying(100),
+    fecha_distribucion date
 )
 
 CREATE INDEX IF NOT EXISTS idx2_cod_matricula
@@ -118,6 +119,12 @@ CREATE INDEX IF NOT EXISTS idx2_cod_matricula
 CREATE INDEX IF NOT EXISTS idx2_id_usuario
     ON tbl_distri_mutaciones USING btree
     (id_usuario ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+-- DROP INDEX IF EXISTS idx2_sap_user;
+CREATE INDEX IF NOT EXISTS idx2_sap_user
+    ON tbl_distri_mutaciones USING btree
+    (sap_user ASC NULLS LAST)
     TABLESPACE pg_default;
 
 
@@ -220,9 +227,13 @@ DECLARE
     total_usuarios INT;
 BEGIN
     -- Validar usuarios existentes
-    SELECT ARRAY_AGG(id_usuario) INTO usuarios_validos
-    FROM tbl_usuarios
-    WHERE id_usuario = ANY(p_id_usuarios);
+    --SELECT ARRAY_AGG(id_usuario) INTO usuarios_validos
+    --FROM tbl_usuarios --OJO: Se debe de poner el esquema correcto
+    --WHERE id_usuario = ANY(p_id_usuarios);
+
+    SELECT ARRAY_AGG(id_user) INTO usuarios_validos
+    FROM tbl_users --OJO: Se debe de poner el esquema correcto
+    WHERE id_user = ANY(p_id_usuarios);
 
     IF usuarios_validos IS NULL OR array_length(usuarios_validos, 1) = 0 THEN
         RAISE EXCEPTION 'No se encontraron usuarios válidos en la tabla tbl_usuarios';
@@ -233,6 +244,34 @@ BEGIN
 	-- Eliminar registros existentes para la fecha actual
     DELETE FROM tbl_distri_mutaciones
     WHERE fecha_distribucion = CURRENT_DATE;
+
+	WITH numerados AS (
+	    SELECT 
+	        v.*,
+	        ((ROW_NUMBER() OVER ()) - 1) % total_usuarios + 1 AS pos_usuario
+	    FROM vw_compara_mutaciones v
+	),
+	asignaciones AS (
+	    SELECT 
+	        n.*,
+	        usuarios_validos[n.pos_usuario] AS id_usuario
+	    FROM numerados n
+	)
+	INSERT INTO tbl_distri_mutaciones (
+	    cod_matricula, max_fecha_plano, max_fecha_sap,
+	    id_zre, cod_naturaleza_juridica, naturaleza_juridica,
+	    anio, mes, id_usuario, sap_user, fecha_distribucion
+	)
+	SELECT 
+	    a.cod_matricula, a.max_fecha_plano, a.max_fecha_sap,
+	    a.id_zre, a.cod_naturaleza_juridica, a.naturaleza_juridica,
+	    a.anio, a.mes, a.id_usuario,
+	    u.sap_user,
+	    CURRENT_DATE
+	FROM asignaciones a
+	JOIN tbl_users u ON u.id_user = a.id_usuario;
+
+	/*
 
     -- Insertar distribución en tbl_distri_mutaciones con fecha actual
     INSERT INTO tbl_distri_mutaciones (
@@ -247,6 +286,7 @@ BEGIN
         usuarios_validos[((ROW_NUMBER() OVER ()) - 1) % total_usuarios + 1] AS id_usuario,
         CURRENT_DATE  -- se guarda la fecha actual
     FROM vw_compara_mutaciones;
+	*/
 END;
 $$;
 

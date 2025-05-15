@@ -14,7 +14,7 @@ SMTP_PASS = settings.SMTP_PASS
 PG_SCHEMA = settings.PG_SCHEMA
 PG_SCHEMA2 = settings.PG_SCHEMA2 #Esquema de tabla maestra de usuarios
 
-def generar_csvs_y_enviar(id_usuarios: list[int]):
+def generar_csvs_y_enviar(id_usuarios: list[str]):
     db: Session = SessionLocal()
 
     for id_usuario in id_usuarios:
