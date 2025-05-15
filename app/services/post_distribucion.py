@@ -11,31 +11,40 @@ SMTP_HOST = settings.SMTP_HOST
 SMTP_PORT = settings.SMTP_PORT
 SMTP_USER = settings.SMTP_USER
 SMTP_PASS = settings.SMTP_PASS
+PG_SCHEMA = settings.PG_SCHEMA
+PG_SCHEMA2 = settings.PG_SCHEMA2 #Esquema de tabla maestra de usuarios
 
 def generar_csvs_y_enviar(id_usuarios: list[int]):
     db: Session = SessionLocal()
 
     for id_usuario in id_usuarios:
-        correo = db.execute(
-            text("SELECT correo_usuario FROM tbl_usuarios WHERE id_usuario = :id"),
+        resultado = db.execute(
+            text(f"""
+                SELECT email_user, sap_user 
+                FROM {PG_SCHEMA2}.tbl_users 
+                WHERE id_user = :id
+            """),
             {"id": id_usuario}
-        ).scalar()
+        ).first()
 
-        if not correo:
+        if not resultado:
             continue
 
         registros = db.execute(
-            text("""
-                SELECT * FROM tbl_distri_mutaciones 
+            text(f"""
+                SELECT * FROM {PG_SCHEMA}.tbl_distri_mutaciones 
                 WHERE id_usuario = :id AND fecha_distribucion = CURRENT_DATE
             """),
             {"id": id_usuario}
         ).fetchall()
 
-        if not registros:
+        if not resultado:
             continue
 
-        filename = f"mutaciones_gestionar_{id_usuario}.xlsx"
+        correo = resultado.email_user
+        sap_user = resultado.sap_user or f"user_{id_usuario}"  # fallback en caso de nulo
+
+        filename = f"mutaciones_gestionar_{sap_user}.xlsx"
         filepath = os.path.join("temp", filename)
         os.makedirs("temp", exist_ok=True)
 
@@ -64,17 +73,17 @@ def generar_csvs_y_enviar(id_usuarios: list[int]):
 def enviar_email(destinatario, archivo_adj, id_usuario):
     db: Session = SessionLocal()
     total_registros = db.execute(
-        text("""
-            SELECT COUNT(*) FROM tbl_distri_mutaciones 
+        text(f"""
+            SELECT COUNT(*) FROM {PG_SCHEMA}.tbl_distri_mutaciones 
             WHERE id_usuario = :id AND fecha_distribucion = CURRENT_DATE
         """),
         {"id": id_usuario}
     ).scalar()
     
     datos_naturaleza = db.execute(
-        text("""
+        text(f"""
             SELECT cod_naturaleza_juridica, naturaleza_juridica, COUNT(*) as cantidad
-            FROM tbl_distri_mutaciones
+            FROM {PG_SCHEMA}.tbl_distri_mutaciones
             WHERE id_usuario = :id AND fecha_distribucion = CURRENT_DATE
             GROUP BY cod_naturaleza_juridica, naturaleza_juridica
             ORDER BY cantidad DESC
@@ -187,8 +196,13 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
     </html>
 """ 
 
+    name_user = db.execute(
+        text(f"SELECT name_user FROM {PG_SCHEMA2}.tbl_users WHERE id_user = :id"),
+        {"id": id_usuario}
+    ).scalar() or f"user_{id_usuario}"
+
     msg = EmailMessage()
-    msg["Subject"] = f"Mutaciones asignadas - Usuario {id_usuario}"
+    msg["Subject"] = f"Mutaciones asignadas - Usuario {name_user}"
     msg["From"] = settings.SMTP_USER
     msg["To"] = destinatario #"nancymaya80@gmail.com"
 

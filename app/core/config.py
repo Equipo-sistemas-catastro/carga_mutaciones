@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     PG_DB: str
     PG_PORT: str
     PG_SCHEMA: str
+    PG_SCHEMA2: str
     
     api_key: str
 

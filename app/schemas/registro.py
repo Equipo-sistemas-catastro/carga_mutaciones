@@ -14,6 +14,7 @@ class DistribucionMutacionOut(BaseModel):
     anio: Optional[int]
     mes: Optional[int]
     id_usuario: int
+    sap_user: Optional[str]
     fecha_distribucion: Optional[date]
 
     class Config:
