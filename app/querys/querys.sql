@@ -62,7 +62,7 @@ CREATE TABLE tbl_usuarios (
 --CREA TABLA MAESTRA NATURALEZA JURIDICA
 ---------------------------------------------------
 DROP TABLE IF EXISTS naturaleza_juridica;
-CREATE TABLE public.naturaleza_juridica
+CREATE TABLE naturaleza_juridica
 (
     id_tabla serial NOT NULL,
 	id_naturaleza text,
@@ -74,9 +74,9 @@ CREATE INDEX idx_id_naturaleza ON naturaleza_juridica(id_naturaleza);
 ---------------------------------------------------
 --INSERTA LAS DATOS DE NATURALEZA JURIDICA QUE SE NECESITAN ANALIZAR 
 ---------------------------------------------------
-INSERT INTO public.naturaleza_juridica (id_naturaleza, nm_naturaleza)
+INSERT INTO naturaleza_juridica (id_naturaleza, nm_naturaleza)
 SELECT DISTINCT ON (cod_naturaleza_juridica) cod_naturaleza_juridica, naturaleza_juridica
-FROM public.planos_turnos_mutaciones
+FROM planos_turnos_mutaciones
 WHERE cod_naturaleza_juridica IN (
     '0107','0108','0109','0104','0110','0112','0113','0122',
     '0124','0125','0138','0139','0140','0141','0144','0146',
@@ -89,8 +89,8 @@ ORDER BY cod_naturaleza_juridica, naturaleza_juridica;
 ---------------------------------------------------
 --CREA TABLA DE DISTRIBUCIONES DE MUTACIONES
 ---------------------------------------------------
-DROP TABLE IF EXISTS public.tbl_distri_mutaciones;
-CREATE TABLE IF NOT EXISTS public.tbl_distri_mutaciones
+DROP TABLE IF EXISTS tbl_distri_mutaciones;
+CREATE TABLE IF NOT EXISTS tbl_distri_mutaciones
 (
     cod_matricula integer NOT NULL,
     max_fecha_plano date,
@@ -103,20 +103,20 @@ CREATE TABLE IF NOT EXISTS public.tbl_distri_mutaciones
     id_usuario integer NOT NULL,
     fecha_distribucion date,
     CONSTRAINT fk_distri_usuarios FOREIGN KEY (id_usuario)
-        REFERENCES public.tbl_usuarios (id_usuario) MATCH SIMPLE
+        REFERENCES tbl_usuarios (id_usuario) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
 
 CREATE INDEX IF NOT EXISTS idx2_cod_matricula
-    ON public.tbl_distri_mutaciones USING btree
+    ON tbl_distri_mutaciones USING btree
     (cod_matricula ASC NULLS LAST)
     TABLESPACE pg_default;
 -- Index: idx2_id_usuario
 
--- DROP INDEX IF EXISTS public.idx2_id_usuario;
+-- DROP INDEX IF EXISTS idx2_id_usuario;
 CREATE INDEX IF NOT EXISTS idx2_id_usuario
-    ON public.tbl_distri_mutaciones USING btree
+    ON tbl_distri_mutaciones USING btree
     (id_usuario ASC NULLS LAST)
     TABLESPACE pg_default;
 
@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx2_id_usuario
 ---------------------------------------------------
 --CREA TABLA zcatt_compravtas
 ---------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.zcatt_compravtas
+CREATE TABLE IF NOT EXISTS zcatt_compravtas
 (
     "mandt." character varying(3) COLLATE pg_catalog."default",
     cd_propietario character varying(20) COLLATE pg_catalog."default",
