@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from typing import Optional, List
 from datetime import datetime, date
+from uuid import UUID
 
 
 class DistribucionMutacionOut(BaseModel):
@@ -21,7 +22,10 @@ class DistribucionMutacionOut(BaseModel):
         model_config = ConfigDict(from_attributes=True)
 
 class UsuarioInput(BaseModel):
-    id_usuario: int
+    id_user: str
+
+class UsuarioUUID(BaseModel):
+    id_user: UUID
 
 class UsuarioList(BaseModel):
     usuarios: List[UsuarioInput]

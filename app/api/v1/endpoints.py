@@ -5,6 +5,7 @@ from typing import Optional, List
 from datetime import date
 from app.services.distribuir_mutaciones import distribuir_registros
 from app.services.post_distribucion import generar_csvs_y_enviar
+from app.schemas.registro import UsuarioUUID
 
 from app.db.session import get_db
 from app.models.registro import PlanoTurnoMutacion, DistribucionMutacion
@@ -42,9 +43,9 @@ def consultar_distribucion_mutaciones(
 
 # 👇 Llamado al SP de la BD para distribuir las mutaciones a los usuarios
 @router.post("/distribuir_mutaciones")
-def distribuir_mutaciones(payload: UsuarioList):
+def distribuir_mutaciones(payload: List[UsuarioUUID]):
     try:
-        id_usuarios = [u.id_usuario for u in payload.usuarios]
+        id_usuarios = [str(u.id_user) for u in payload]
         distribuir_registros(id_usuarios)  # Ejecuta el SP
         generar_csvs_y_enviar(id_usuarios)  # Genera y envía CSVs
         return {"msg": "Registros distribuidos y correos enviados correctamente"}

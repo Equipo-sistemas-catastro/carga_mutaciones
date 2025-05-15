@@ -14,7 +14,11 @@ app = FastAPI()
 cors_origins=settings.cors_origins
 
 # 👇 Configuración de CORS
-origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+#origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3002",
+]
 
 app.add_middleware(
     CORSMiddleware,

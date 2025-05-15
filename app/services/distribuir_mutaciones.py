@@ -4,7 +4,7 @@ from app.core.config import settings
 
 schema = settings.PG_SCHEMA
 
-def distribuir_registros(id_usuarios: list[int]):
+def distribuir_registros(id_usuarios: list[str]):
     db = SessionLocal()
     try:
         procedure = f'CALL {schema}.sp_distribuir_mutaciones(:usuarios)'  # Formato dinámico con el esquema
