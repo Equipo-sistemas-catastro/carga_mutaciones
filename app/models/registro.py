@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, UUID, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, Date, UUID, TIMESTAMP, Numeric, func
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
@@ -6,6 +6,27 @@ from app.core.config import settings
 Base = declarative_base()
 
 SCHEMA=settings.PG_SCHEMA
+
+class vw_distribucion_aplicados(Base):
+    __tablename__ = "vw_distribucion_aplicados"
+    __table_args__ = {"schema": SCHEMA}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(Text)
+    cod_naturaleza_juridica = Column(Text)
+    naturaleza_juridica = Column(String(100))
+    anio = Column(Integer)
+    mes = Column(Integer)
+    id_usuario = Column(UUID)
+    sap_user = Column(String)
+    fecha_distribucion = Column(Date)
+    fc_mutacion = Column(Date)
+    cd_propietario = Column(String)
+    cd_comprador = Column(String)
+    vl_compraventa = Column(Numeric)
+    mutacion_aplicada = Column(String)
 
 class DistribucionMutacion(Base):
     __tablename__ = "tbl_distri_mutaciones"

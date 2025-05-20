@@ -314,6 +314,47 @@ ON vw_compara_mutaciones (cod_matricula);
 REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
 
 
+---------------------------------------------------
+--CREA LA VISTA MATERIALIZADA vw_distribucion_aplicados
+---------------------------------------------------
+--CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON
+-- INDICA SI SE APLICARON EN zcatt_compravtas "SI" ó "NO"
+---------------------------------------------------
+-- EL REFRESH DE LA VISTA SE HACE EN EL sp_distribuir_mutaciones
+---------------------------------------------------
+CREATE MATERIALIZED VIEW vw_distribucion_aplicados AS
+WITH ultima_distribucion AS (
+    SELECT *
+    FROM tbl_distri_mutaciones
+    WHERE fecha_distribucion = (
+        SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones
+    )
+),
+ultimas_compraventas AS (
+    SELECT DISTINCT ON (nm_matricula_pdi)
+        *
+    FROM zcatt_compravtas
+    WHERE nm_matricula_pdi IS NOT NULL
+    ORDER BY nm_matricula_pdi, fc_mutacion DESC
+)
+SELECT
+    d.*,
+    z.fc_mutacion,
+    z.cd_propietario,
+    z.cd_comprador,
+    z.vl_compraventa,
+    CASE 
+        WHEN d.max_fecha_plano > z.fc_mutacion THEN 'NO'
+        WHEN d.max_fecha_plano <= z.fc_mutacion THEN 'SI'
+        ELSE NULL
+    END AS mutacion_aplicada
+FROM ultima_distribucion d
+LEFT JOIN ultimas_compraventas z
+    ON d.cod_matricula = z.nm_matricula_pdi;
+
+
+CREATE UNIQUE INDEX idx_vw_distribucion_aplicados_uidx
+ON vw_distribucion_aplicados (cod_matricula, id_usuario);
 
 ---------------------------------------------------
 --CREA UN SP EN LA BD PARA DISTRIBUIR LAS MUTACIONES...
@@ -371,6 +412,14 @@ BEGIN
     FROM asignaciones a
     JOIN tbl_users u ON u.id_user = a.id_usuario;
 
+	--SE NECESITA ACTUALIZAR LA VISTA DE APLICACIONES  
+	REFRESH MATERIALIZED VIEW vw_distribucion_aplicados;
+
 END;
 $BODY$;
+
+
+
+
+
 
