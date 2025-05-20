@@ -204,7 +204,7 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
     msg = EmailMessage()
     msg["Subject"] = f"Mutaciones asignadas - Usuario {name_user}"
     msg["From"] = settings.SMTP_USER
-    msg["To"] = destinatario #"nancymaya80@gmail.com"
+    msg["To"] = destinatario #"nancymaya80@gmail.com""victorge08@gmail.com"
 
     msg.set_content("Este correo contiene información en formato HTML.")
     msg.add_alternative(cuerpo_html, subtype="html")
