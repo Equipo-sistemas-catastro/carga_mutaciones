@@ -14,7 +14,7 @@ class DistribucionMutacionOut(BaseModel):
     naturaleza_juridica: Optional[str]
     anio: Optional[int]
     mes: Optional[int]
-    id_usuario: int
+    id_usuario: Optional[UUID]
     sap_user: Optional[str]
     fecha_distribucion: Optional[date]
 

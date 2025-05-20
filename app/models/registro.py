@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, Date, UUID, TIMESTAMP, func
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
@@ -19,7 +19,7 @@ class DistribucionMutacion(Base):
     naturaleza_juridica = Column(String(100))
     anio = Column(Integer)
     mes = Column(Integer)
-    id_usuario = Column(Integer)
+    id_usuario = Column(UUID)
     sap_user = Column(Text)
     fecha_distribucion = Column(Date)
 

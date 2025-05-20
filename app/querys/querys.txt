@@ -45,6 +45,11 @@ CREATE INDEX idx_log_estado ON log_cargaplano_mutaciones(estado);
 --------------------------------------------------------
 
 
+-------------------------------------------------------------------------
+--OJO: CORRER EL PROCESO DE CARGA DE LOS PLANOS (python -m app.run_carga)
+-------------------------------------------------------------------------
+
+
 --------------------------------------------------------
 --CREA TABLA DE USUARIOS (CREAR EL ESQUEMA sis_sugt_auth)
 --------------------------------------------------------
@@ -61,7 +66,7 @@ CREATE TABLE IF NOT EXISTS tbl_users
     sap_user character varying(100) COLLATE pg_catalog."default"
 )
 
-/*
+
 ---------------------------------------------------
 --CREA TABLA MAESTRA NATURALEZA JURIDICA
 ---------------------------------------------------
@@ -77,38 +82,113 @@ CREATE TABLE tbl_naturaleza_juridica
 CREATE INDEX idx2_id_naturaleza ON tbl_naturaleza_juridica(id_naturaleza);
 CREATE INDEX idx_indicador_filtro ON tbl_naturaleza_juridica(indicador_filtro);
 
-SELECT DISTINCT cod_naturaleza_juridica, naturaleza_juridica
-FROM public.planos_turnos_mutaciones
-ORDER BY cod_naturaleza_juridica;
-*/
-
----------------------------------------------------
---CREA TABLA MAESTRA NATURALEZA JURIDICA
----------------------------------------------------
-DROP TABLE IF EXISTS naturaleza_juridica;
-CREATE TABLE naturaleza_juridica
-(
-    id_tabla serial NOT NULL,
-	id_naturaleza text,
-    nm_naturaleza text,
-    PRIMARY KEY (id_tabla)
-);
-CREATE INDEX idx_id_naturaleza ON naturaleza_juridica(id_naturaleza);
 
 ---------------------------------------------------
 --INSERTA LAS DATOS DE NATURALEZA JURIDICA QUE SE NECESITAN ANALIZAR 
 ---------------------------------------------------
-INSERT INTO naturaleza_juridica (id_naturaleza, nm_naturaleza)
-SELECT DISTINCT ON (cod_naturaleza_juridica) cod_naturaleza_juridica, naturaleza_juridica
-FROM planos_turnos_mutaciones
-WHERE cod_naturaleza_juridica IN (
-    '0107','0108','0109','0104','0110','0112','0113','0122',
-    '0124','0125','0138','0139','0140','0141','0144','0146',
-    '0163','0164','0168','0169','0172'
-)
-ORDER BY cod_naturaleza_juridica, naturaleza_juridica;
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01004','PARTICION DEL PATRIMONIO EN VIDA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01005','TRANSFERENCIA A TITULO DE RESTITUCION DE APORTE',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01006','RESTITUCION ADMINISTRATIVA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01007','TRANSFERENCIA DE DOMINIO POR DISTRIBUCION ANTICIPADA DE ACTIVOS SOCIALES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01008','LIQUIDACION PERSONA NATURAL NO COMERCIANTE',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01013','TRANSFERENCIA DE DOMINIO A TITULO DE CESION',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('01014','TRANSFERENCIA DE DOMINIO PARA ENAJENACION TEMPRANA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0104','POR DEFINIR NATURALEZA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0106','ADJUDICACION DE BIENES VACANTES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0107','ADJUDICACION DE LA COSA HIPOTECADA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0108','ADJUDICACION EN REMATE',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0109','ADJUDICACION EN SUCESION',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0110','ADJUDICACION LIQUIDACION DE LA COMUNIDAD',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0111','ADJUDICACION LIQUIDACION SOCIEDAD COMERCIAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0112','ADJUDICACION LIQUIDACION SOCIEDAD CONYUGAL',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0113','ADJUDICACION LIQUIDACION SOCIEDAD PATRIMONIAL DE HECHO',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0114','ADJUDICACION POR EXPROPIACION',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0115','ADJUDICACION SUCESION PARTICION ADICIONAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0118','APORTE A SOCIEDAD',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0119','APORTE DE SUBSIDIO EN ESPECIE',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0120','CADUCIDAD ADMINISTRATIVA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0121','CESION A TITULO GRATUITO DE BIENES FISCALES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0122','CESION DE BIENES OBLIGATORIA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0124','CESION OBLIGATORIA DE ZONAS CON DESTINO A USO PUBLICO',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0125','COMPRAVENTA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0126','COMPRAVENTA PARCIAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0127','CONSOLIDACION DE DOMINIO PLENO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0128','CONSTITUCION DE FIDUCIA MERCANTIL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0129','DACION EN PAGO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0130','DACION EN PAGO OBLIGATORIA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0131','DECLARACION JUDICIAL DE PERTENENCIA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0135','DECLARATORIA SIMULACION DE CONTRATO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0137','DESTINACION DEFINITIVA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0138','DONACION',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0139','ESCISION',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0140','EXPROPIACION POR VIA ADMNINISTRATIVA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0141','EXPROPIACION POR VIA JUDICIAL',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0142','EXTINCION DEL DERECHO DE DOMINIO PRIVADO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0143','FUSION',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0144','PERMUTA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0146','RATIFICACION CONTRATO',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0149','REIVINDICACION',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0150','RENTA VITALICIA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0151','RESCILIACION',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0152','RESCISION CONTRATO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0153','RESOLUCION CONTRATO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0154','RESTITUCION EN FIDEICOMISO CIVIL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0155','RESTITUCION EN FIDUCIA MERCANTIL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0160','REVOCATORIA JUDICIAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0163','TRANSACCION',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0164','TRANSFERENCIA DE DOMINIO A TITULO DE BENEFICIO EN FIDUCIA MERCANTIL',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0165','TRANSFERENCIA DE DOMINIO POR SOLUCION O PAGO EFECTIVO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0167','ADJUDICACION LIQUIDACION SOCIEDAD DE HECHO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0168','TRANSFERENCIA DE DOMINIO A TITULO DE LEASING HABITACIONAL DE VIVIENDA FAMILIAR',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0169','TRANSFERENCIA DE DOMINIO A TITULO DE LEASING HABITACIONAL DE VIVIENDA NO FAMILIAR',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0171','ENTREGA ANTICIPADA DE CESIONES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0172','POR DEFINIR NATURALEZA',1);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0173','SANEAMIENTO TITULACION LEY NO. 1561 DE 2012',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0178','RESCILIACION DE NEGOCIO JURIDICO EN PROCESO DE JUSTICIA Y PAZ - LEY 975 DE 2005',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0180','ACUERDO DE ADJUDICACION ART 37 LEY 1116 DE 2006',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0181','ADJUDICACION EN PROCESO DE LIQUIDACION JUDICIAL ART 58 LEY 1116 DE 2006',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0182','RESTITUCION DERECHO DE DOMINIO ART.91 LEY 1448 DE 2011.',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0185','DECLARATORIA DE SANEAMIENTO AUTOMATICO POR MINISTERIO DE LA LEY(LEY 1682 DE 2013 DECRETO 737 DE 2014)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0186','TRANSFERENCIA A TITULO DE SUBSIDIO EN ESPECIE.(LEY 1537 DE 2012)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0187','MODIFICACION FIDUCIA MERCANTIL(TITULO XI DEL C. DE CO)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0189','TRANSFERENCIA DE DOMINIO POR ADICION A FIDUCIA MERCANTIL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0194','TRANSFERENCIA A TITULO DE LEASING INMOBILIARIO (DECRETO 193 DE 1993. DECRETO 2555 DE 2010)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0197','ADJUDICACION EN SUCESION Y LIQUIDACION DE LA SOCIEDAD CONYUGAL Y / O SOCIEDAD PATRIMONIAL DE HECHO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0219','HIPOTECA ABIERTA SIN LIMITE DE CUANTIA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0301','ADJUDICACION SUCESION DERECHO DE CUOTA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0302','ADJUDICACION SUCESION NUDA PROPIEDAD',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0307','COMPRAVENTA DERECHOS DE CUOTA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0308','COMPRAVENTA NUDA PROPIEDAD',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0310','COMPRAVENTA USUFRUCTO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0313','CONSTITUCION DE FIDEICOMISO CIVIL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0314','CONSTITUCION DE USUFRUCTO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0317','CONSTITUCION REGLAMENTO DE PROPIEDAD HORIZONTAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0322','DONACION NUDA PROPIEDAD',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0323','DONACION USUFRUCTO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0332','REMATE DERECHO DE CUOTA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0333','RESERVA DERECHO DE USUFRUCTO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0348','ADJUDICACION LIQUIDACION DE LA SOCIEDAD CONYUGAL DERECHO DE CUOTA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0349','ADJUDICACION LIQUIDACION DE LA SOCIEDAD CONYUGAL NUDA PROPIEDAD',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0601','ADJUDICACION SUCESION DERECHOS Y ACCIONES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0604','COMPRAVENTA DE COSA AJENA',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0605','TRANSFERENCIA DE CUERPO CIERTO TENIENDO SOLO DERECHOS DE COUTA CON ANTECEDENTE REGISTRAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0606','COMPRAVENTA DERECHOS GANANCIALES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0607','COMPRAVENTA DERECHOS Y ACCIONES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0608','COMPRAVENTA POSESION CON ANTECEDENTE REGISTRAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0615','ADJUDICACION LIQUIDACION SOCIEDAD CONYUGAL DERECHOS Y ACCIONES',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0616','COMPRAVENTA MEJORAS EN SUELO AJENO CON ANTECEDENTE REGISTRAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0906','CAMBIO DE NOMBRE',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0907','CAMBIO DE RAZON SOCIAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0918','DIVISION MATERIAL',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0919','ENGLOBE',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0920','LOTEO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('0924','RELOTEO',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('101','COMPRAVENTA (MODO DE ADQUIRIR)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('105','APORTE SOCIEDAD (MODO DE ADQUIRIR)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('106','ADJUDICACION. MODO DE ADQUIRIR',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('150','ADJUDICACION EN SUCESION (MODO DE ADQUIRIR)',0);
+INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_filtro) VALUES ('360','REGLAMENTO PROPIEDAD HORIZONTAL (LIMITACION DOMINIO)',0);
 
----------------------------------------------------
 
 ---------------------------------------------------
 --CREA TABLA DE DISTRIBUCIONES DE MUTACIONES
@@ -148,10 +228,9 @@ CREATE INDEX IF NOT EXISTS idx2_sap_user
     TABLESPACE pg_default;
 
 
-
----------------------------------------------------
---CREA TABLA zcatt_compravtas
----------------------------------------------------
+------------------------------------------------------------
+--CREA TABLA zcatt_compravtas (OJO: Hay que poblar la tabla)
+------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS zcatt_compravtas
 (
     "mandt." character varying(3) COLLATE pg_catalog."default",
@@ -218,9 +297,10 @@ SELECT
 FROM ultimos_planos p
 JOIN ultimas_compraventas z
     ON p.id_matricula = z.nm_matricula_pdi
-INNER JOIN naturaleza_juridica nj
+INNER JOIN tbl_naturaleza_juridica nj
     ON p.cod_naturaleza_juridica = nj.id_naturaleza
 WHERE p.fecha_calculada > z.fc_mutacion
+	AND nj.indicador_filtro = 1 --FILTRA LAS NJ DE NANCY
 ORDER BY p.id_matricula;
 
 
@@ -239,17 +319,20 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
 --CREA UN SP EN LA BD PARA DISTRIBUIR LAS MUTACIONES...
 --A LOS USUARIOS SELECCIONADOS DESDE EL FRONTEND
 ---------------------------------------------------
-CREATE OR REPLACE PROCEDURE sp_distribuir_mutaciones(p_id_usuarios UUID[])
-LANGUAGE plpgsql
-AS $$
+CREATE OR REPLACE PROCEDURE public.sp_distribuir_mutaciones(
+	IN p_id_usuarios text[])
+LANGUAGE 'plpgsql'
+AS $BODY$
 DECLARE
     usuarios_validos UUID[];
     total_usuarios INT;
 BEGIN
-    -- Validar usuarios existentes
+    -- Validar usuarios existentes (convertir desde TEXT[] a UUID[])
     SELECT ARRAY_AGG(id_user) INTO usuarios_validos
     FROM tbl_users
-    WHERE id_user = ANY(p_id_usuarios);
+    WHERE id_user = ANY (ARRAY(
+        SELECT uuid(u) FROM unnest(p_id_usuarios) AS u
+    ));
 
     IF usuarios_validos IS NULL OR array_length(usuarios_validos, 1) = 0 THEN
         RAISE EXCEPTION 'No se encontraron usuarios válidos en la tabla tbl_users';
@@ -257,9 +340,11 @@ BEGIN
 
     total_usuarios := array_length(usuarios_validos, 1);
 
+    -- Eliminar registros existentes para la fecha actual
     DELETE FROM tbl_distri_mutaciones
     WHERE fecha_distribucion = CURRENT_DATE;
 
+    -- Asignar registros desde la vista a los usuarios válidos de forma cíclica
     WITH numerados AS (
         SELECT 
             v.*,
@@ -285,82 +370,7 @@ BEGIN
         CURRENT_DATE
     FROM asignaciones a
     JOIN tbl_users u ON u.id_user = a.id_usuario;
+
 END;
-$$;
-
-
-
-
-/*
-CREATE OR REPLACE PROCEDURE sp_distribuir_mutaciones(p_id_usuarios TEXT[])
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    usuarios_validos UUID[];
-    total_usuarios INT;
-BEGIN
-    -- Validar usuarios existentes
-    --SELECT ARRAY_AGG(id_usuario) INTO usuarios_validos
-    --FROM tbl_usuarios --OJO: Se debe de poner el esquema correcto
-    --WHERE id_usuario = ANY(p_id_usuarios);
-
-    SELECT ARRAY_AGG(id_user) INTO usuarios_validos
-    FROM tbl_users --OJO: Se debe de poner el esquema correcto
-    WHERE id_user = ANY(p_id_usuarios);
-
-    IF usuarios_validos IS NULL OR array_length(usuarios_validos, 1) = 0 THEN
-        RAISE EXCEPTION 'No se encontraron usuarios válidos en la tabla tbl_usuarios';
-    END IF;
-
-    total_usuarios := array_length(usuarios_validos, 1);
-
-	-- Eliminar registros existentes para la fecha actual
-    DELETE FROM tbl_distri_mutaciones
-    WHERE fecha_distribucion = CURRENT_DATE;
-
-	WITH numerados AS (
-	    SELECT 
-	        v.*,
-	        ((ROW_NUMBER() OVER ()) - 1) % total_usuarios + 1 AS pos_usuario
-	    FROM vw_compara_mutaciones v
-	),
-	asignaciones AS (
-	    SELECT 
-	        n.*,
-	        usuarios_validos[n.pos_usuario] AS id_usuario
-	    FROM numerados n
-	)
-	INSERT INTO tbl_distri_mutaciones (
-	    cod_matricula, max_fecha_plano, max_fecha_sap,
-	    id_zre, cod_naturaleza_juridica, naturaleza_juridica,
-	    anio, mes, id_usuario, sap_user, fecha_distribucion
-	)
-	SELECT 
-	    a.cod_matricula, a.max_fecha_plano, a.max_fecha_sap,
-	    a.id_zre, a.cod_naturaleza_juridica, a.naturaleza_juridica,
-	    a.anio, a.mes, a.id_usuario,
-	    u.sap_user,
-	    CURRENT_DATE
-	FROM asignaciones a
-	JOIN tbl_users u ON u.id_user = a.id_usuario;
-
-	/*
-
-    -- Insertar distribución en tbl_distri_mutaciones con fecha actual
-    INSERT INTO tbl_distri_mutaciones (
-        cod_matricula, max_fecha_plano, max_fecha_sap,
-        id_zre, cod_naturaleza_juridica, naturaleza_juridica,
-        anio, mes, id_usuario, fecha_distribucion
-    )
-    SELECT
-        cod_matricula, max_fecha_plano, max_fecha_sap,
-        id_zre, cod_naturaleza_juridica, naturaleza_juridica,
-        anio, mes,
-        usuarios_validos[((ROW_NUMBER() OVER ()) - 1) % total_usuarios + 1] AS id_usuario,
-        CURRENT_DATE  -- se guarda la fecha actual
-    FROM vw_compara_mutaciones;
-	*/
-END;
-$$;
-
+$BODY$;
 
