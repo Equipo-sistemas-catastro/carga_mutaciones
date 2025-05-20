@@ -1,17 +1,58 @@
-from sqlalchemy import Column, Integer, String, Text, Date, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, Date, UUID, TIMESTAMP, Numeric, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
-import os
 
 Base = declarative_base()
 
 # Call to Environment Variablesregistro.py
 SCHEMA = settings.PG_SCHEMA
 
+# Call to Environment Variablesregistro.py
+SCHEMA = settings.PG_SCHEMA
+
+SCHEMA=settings.PG_SCHEMA
+
+class vw_distribucion_aplicados(Base):
+    __tablename__ = "vw_distribucion_aplicados"
+    __table_args__ = {"schema": SCHEMA}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(Text)
+    cod_naturaleza_juridica = Column(Text)
+    naturaleza_juridica = Column(String(100))
+    anio = Column(Integer)
+    mes = Column(Integer)
+    id_usuario = Column(UUID)
+    sap_user = Column(String)
+    fecha_distribucion = Column(Date)
+    fc_mutacion = Column(Date)
+    cd_propietario = Column(String)
+    cd_comprador = Column(String)
+    vl_compraventa = Column(Numeric)
+    mutacion_aplicada = Column(String)
+
+class DistribucionMutacion(Base):
+    __tablename__ = "tbl_distri_mutaciones"
+    __table_args__ = {"schema": SCHEMA}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(Text)
+    cod_naturaleza_juridica = Column(Text)
+    naturaleza_juridica = Column(String(100))
+    anio = Column(Integer)
+    mes = Column(Integer)
+    id_usuario = Column(UUID)
+    sap_user = Column(Text)
+    fecha_distribucion = Column(Date)
+
 class VWComparaMutaciones(Base):
     __tablename__ = "vw_compara_mutaciones"
-    __table_args__ = {"schema": SCHEMA}
+    __table_args__ = {"extend_existing": True}
 
     cod_matricula = Column(Integer, primary_key=True)
     max_fecha_plano = Column(Date)
@@ -24,7 +65,6 @@ class VWComparaMutaciones(Base):
 
 class PlanoTurnoMutacion(Base):
     __tablename__ = "planos_turnos_mutaciones"
-    __table_args__ = {"schema": SCHEMA}
 
     id_tabla = Column(Integer, primary_key=True, index=True)
     id_radicacion = Column(Text)
@@ -43,7 +83,6 @@ class PlanoTurnoMutacion(Base):
 
 class LogCargaPlanoMutacion(Base):
     __tablename__ = "log_cargaplano_mutaciones"
-    __table_args__ = {"schema": SCHEMA}
 
     id_log = Column(Integer, primary_key=True, index=True)
     nombre_archivo = Column(Text, nullable=False, index=True)

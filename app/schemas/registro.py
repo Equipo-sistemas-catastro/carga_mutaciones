@@ -2,7 +2,53 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from typing import Optional, List
 from datetime import datetime, date
+from uuid import UUID
 
+class vw_distribucion_aplicadosOut(BaseModel):
+    cod_matricula: int
+    max_fecha_plano: Optional[date]
+    max_fecha_sap: Optional[date]
+    id_zre: Optional[str]
+    cod_naturaleza_juridica: Optional[str]
+    naturaleza_juridica: Optional[str]
+    anio: Optional[int]
+    mes: Optional[int]
+    id_usuario: Optional[UUID]
+    sap_user: Optional[str]
+    fecha_distribucion: Optional[date]
+    fc_mutacion: Optional[date]
+    cd_propietario: Optional[str]
+    cd_comprador: Optional[str]
+    vl_compraventa: Optional[float]
+    mutacion_aplicada: Optional[str]
+
+    class Config:
+        model_config = ConfigDict(from_attributes=True)
+
+class DistribucionMutacionOut(BaseModel):
+    cod_matricula: int
+    max_fecha_plano: Optional[date]
+    max_fecha_sap: Optional[date]
+    id_zre: Optional[str]
+    cod_naturaleza_juridica: Optional[str]
+    naturaleza_juridica: Optional[str]
+    anio: Optional[int]
+    mes: Optional[int]
+    id_usuario: Optional[UUID]
+    sap_user: Optional[str]
+    fecha_distribucion: Optional[date]
+
+    class Config:
+        model_config = ConfigDict(from_attributes=True)
+
+class UsuarioInput(BaseModel):
+    id_user: str
+
+class UsuarioUUID(BaseModel):
+    id_user: UUID
+
+class UsuarioList(BaseModel):
+    usuarios: List[UsuarioInput]
 
 class VWComparaMutacionesBase(BaseModel):
     cod_matricula: int
