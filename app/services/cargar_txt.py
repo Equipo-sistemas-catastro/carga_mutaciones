@@ -15,6 +15,7 @@ from app.core.config import settings
 CARPETA_ORIGEN = settings.CARPETA_ORIGEN_MUTACIONES
 CARPETA_EXITOSO = settings.CARPETA_EXITOSO_MUTACIONES
 CARPETA_FALLIDO = settings.CARPETA_FALLIDO_MUTACIONES
+SCHEMA=settings.PG_SCHEMA
 
 def extraer_mes_anio(nombre_archivo: str):
     sin_ext = os.path.splitext(nombre_archivo)[0]  # quita ".txt"
@@ -101,8 +102,15 @@ def procesar_archivos_mutaciones(db: Session):
             db.commit()
 
             # 🔄 Refrescar la vista materializada
-            db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY sis_catastro_verificacion.vw_compara_mutaciones;"))
+            view_name = "vw_compara_mutaciones"
+            full_view_name = f"{SCHEMA}.{view_name}"
+            #print(f"Nombre Vista -->: {full_view_name}")
+            query = f"REFRESH MATERIALIZED VIEW CONCURRENTLY {full_view_name};"
+            #print(f"REFRESH -->: {query}")
+            db.execute(text(query))
             db.commit()
+            #db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones;"))
+            #db.commit()
             
             shutil.move(ruta_completa, os.path.join(CARPETA_EXITOSO, archivo))
             crear_log_carga(db, LogCargaPlanoMutacionCreate(
