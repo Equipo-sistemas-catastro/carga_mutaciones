@@ -12,9 +12,6 @@ from app.models.registro import PlanoTurnoMutacion, DistribucionMutacion, vw_dis
 from app.schemas.registro import PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones, UsuarioList, DistribucionMutacionOut, vw_distribucion_aplicadosOut, vw_aplicados_agrupadosOut, ConsultaDistriMutacionesOut
 from app.crud.registro import get_compara_mutaciones
 from app.crud import registro
-#from app.schemas.paginacion import CustomParams
-
-#from fastapi_pagination import Page
 from app.schemas.paginacion import CustomPage, CustomParams
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 

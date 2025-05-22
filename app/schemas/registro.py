@@ -50,6 +50,7 @@ class ConsultaDistriMutacionesOut(BaseModel):
     fecha_distribucion: Optional[date]
     name_user: Optional[str]
 
+
 class DistribucionMutacionOut(BaseModel):
     cod_matricula: int
     max_fecha_plano: Optional[date]

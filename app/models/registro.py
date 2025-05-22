@@ -8,11 +8,6 @@ Base = declarative_base()
 # Call to Environment Variablesregistro.py
 SCHEMA = settings.PG_SCHEMA
 
-# Call to Environment Variablesregistro.py
-SCHEMA = settings.PG_SCHEMA
-
-SCHEMA=settings.PG_SCHEMA
-
 class vw_aplicados_agrupados(Base):
     __tablename__ = "vw_aplicados_agrupados"
     __table_args__ = {"schema": settings.PG_SCHEMA}
@@ -80,7 +75,7 @@ class DistribucionMutacion(Base):
 
 class VWComparaMutaciones(Base):
     __tablename__ = "vw_compara_mutaciones"
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = {"schema": SCHEMA}
 
     cod_matricula = Column(Integer, primary_key=True)
     max_fecha_plano = Column(Date)
@@ -93,6 +88,7 @@ class VWComparaMutaciones(Base):
 
 class PlanoTurnoMutacion(Base):
     __tablename__ = "planos_turnos_mutaciones"
+    __table_args__ = {"schema": SCHEMA}
 
     id_tabla = Column(Integer, primary_key=True, index=True)
     id_radicacion = Column(Text)
@@ -111,6 +107,7 @@ class PlanoTurnoMutacion(Base):
 
 class LogCargaPlanoMutacion(Base):
     __tablename__ = "log_cargaplano_mutaciones"
+    __table_args__ = {"schema": SCHEMA}
 
     id_log = Column(Integer, primary_key=True, index=True)
     nombre_archivo = Column(Text, nullable=False, index=True)
