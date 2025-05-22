@@ -43,19 +43,12 @@ class vw_distribucion_aplicados(Base):
 class ConsultaDistriMutaciones(Base):
     __tablename__ = "vw_consulta_distri_mutaciones"
     __table_args__ = {"schema": SCHEMA}
+    __mapper_args__ = {"primary_key": ["name_user", "cod_naturaleza_juridica"]}
 
-    cod_matricula = Column(Integer, primary_key=True)
-    max_fecha_plano = Column(Date)
-    max_fecha_sap = Column(Date)
-    id_zre = Column(Text)
-    cod_naturaleza_juridica = Column(Text)
-    naturaleza_juridica = Column(String(100))
-    anio = Column(Integer)
-    mes = Column(Integer)
-    id_usuario = Column(UUID)
-    sap_user = Column(String(100))
-    fecha_distribucion = Column(Date)
     name_user = Column(String)
+    cod_naturaleza_juridica = Column(String)
+    naturaleza_juridica = Column(String)
+    total_mutaciones = Column(Integer)
 
 class DistribucionMutacion(Base):
     __tablename__ = "tbl_distri_mutaciones"
