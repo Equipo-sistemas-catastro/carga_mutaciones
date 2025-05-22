@@ -12,7 +12,7 @@ class vw_aplicados_agrupados(Base):
     __tablename__ = "vw_aplicados_agrupados"
     __table_args__ = {"schema": settings.PG_SCHEMA}
 
-    sap_user = Column(String, primary_key=True)
+    name_user = Column(String, primary_key=True)
     cod_naturaleza_juridica = Column(String, primary_key=True)
     naturaleza_juridica = Column(String)
     total_registros = Column(Integer)
@@ -31,14 +31,13 @@ class vw_distribucion_aplicados(Base):
     naturaleza_juridica = Column(String(100))
     anio = Column(Integer)
     mes = Column(Integer)
-    id_usuario = Column(UUID)
-    sap_user = Column(String)
+    id_usuario = Column(UUID)  # UUID como string
+    sap_user = Column(Text)
     fecha_distribucion = Column(Date)
+    name_user = Column(String)
     fc_mutacion = Column(Date)
-    cd_propietario = Column(String)
-    cd_comprador = Column(String)
-    vl_compraventa = Column(Numeric)
     mutacion_aplicada = Column(String)
+
 
 class ConsultaDistriMutaciones(Base):
     __tablename__ = "vw_consulta_distri_mutaciones"
