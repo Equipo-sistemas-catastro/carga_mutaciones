@@ -337,10 +337,8 @@ ultimas_compraventas AS (
 )
 SELECT
     d.*,
+    u.name_user,
     z.fc_mutacion,
-    z.cd_propietario,
-    z.cd_comprador,
-    z.vl_compraventa,
     CASE 
         WHEN d.max_fecha_plano > z.fc_mutacion THEN 'NO'
         WHEN d.max_fecha_plano <= z.fc_mutacion THEN 'SI'
@@ -348,27 +346,28 @@ SELECT
     END AS mutacion_aplicada
 FROM ultima_distribucion d
 LEFT JOIN ultimas_compraventas z
-    ON d.cod_matricula = z.nm_matricula_pdi;
-
+    ON d.cod_matricula = z.nm_matricula_pdi
+JOIN tbl_users u
+    ON d.id_usuario = u.id_user;
 
 
 ---------------------------------------------------
---CREA LA VISTA vw_distribucion_aplicados
+--CREA LA VISTA vw_aplicados_agrupados
 ---------------------------------------------------
 --CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON Y SI APLICARON
 -- DE FORMA AGRUPADA POR USUARIO SAP Y NJ
 ---------------------------------------------------
 CREATE OR REPLACE VIEW vw_aplicados_agrupados AS
 SELECT
-    sap_user,
+    name_user,
     cod_naturaleza_juridica,
     naturaleza_juridica,
     COUNT(*) AS total_registros,
     COUNT(*) FILTER (WHERE mutacion_aplicada = 'SI') AS total_aplicadas,
     COUNT(*) FILTER (WHERE mutacion_aplicada = 'NO') AS total_no_aplicadas
 FROM vw_distribucion_aplicados
-GROUP BY sap_user, cod_naturaleza_juridica, naturaleza_juridica
-ORDER BY sap_user, total_registros DESC;
+GROUP BY name_user, cod_naturaleza_juridica, naturaleza_juridica
+ORDER BY name_user, total_registros DESC;
 
 
 
@@ -379,14 +378,17 @@ ORDER BY sap_user, total_registros DESC;
 ---------------------------------------------------
 CREATE OR REPLACE VIEW vw_consulta_distri_mutaciones AS
 SELECT 
-    d.*,
-    u.name_user
+    u.name_user,
+    d.cod_naturaleza_juridica,
+    d.naturaleza_juridica,
+    COUNT(*) AS total_mutaciones
 FROM tbl_distri_mutaciones d
 JOIN tbl_users u ON d.id_usuario = u.id_user
 WHERE d.fecha_distribucion = (
-        SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones);
-
-
+    SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones
+)
+GROUP BY u.name_user, d.cod_naturaleza_juridica, d.naturaleza_juridica
+ORDER BY u.name_user, total_mutaciones DESC;
 
 ---------------------------------------------------
 --CREA UN SP EN LA BD PARA DISTRIBUIR LAS MUTACIONES...

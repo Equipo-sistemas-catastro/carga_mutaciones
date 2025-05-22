@@ -5,7 +5,7 @@ from datetime import datetime, date
 from uuid import UUID
 
 class vw_aplicados_agrupadosOut(BaseModel):
-    sap_user: Optional[str]
+    name_user: Optional[str]
     cod_naturaleza_juridica: Optional[str]
     naturaleza_juridica: Optional[str]
     total_registros: int
@@ -27,10 +27,8 @@ class vw_distribucion_aplicadosOut(BaseModel):
     id_usuario: Optional[UUID]
     sap_user: Optional[str]
     fecha_distribucion: Optional[date]
+    name_user: Optional[str]
     fc_mutacion: Optional[date]
-    cd_propietario: Optional[str]
-    cd_comprador: Optional[str]
-    vl_compraventa: Optional[float]
     mutacion_aplicada: Optional[str]
 
     class Config:
