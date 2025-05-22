@@ -315,14 +315,12 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
 
 
 ---------------------------------------------------
---CREA LA VISTA MATERIALIZADA vw_distribucion_aplicados
+--CREA LA VISTA vw_distribucion_aplicados
 ---------------------------------------------------
 --CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON
 -- INDICA SI SE APLICARON EN zcatt_compravtas "SI" ó "NO"
 ---------------------------------------------------
--- EL REFRESH DE LA VISTA SE HACE EN EL sp_distribuir_mutaciones
----------------------------------------------------
-CREATE MATERIALIZED VIEW vw_distribucion_aplicados AS
+CREATE OR REPLACE VIEW vw_distribucion_aplicados AS
 WITH ultima_distribucion AS (
     SELECT *
     FROM tbl_distri_mutaciones
@@ -353,8 +351,25 @@ LEFT JOIN ultimas_compraventas z
     ON d.cod_matricula = z.nm_matricula_pdi;
 
 
-CREATE UNIQUE INDEX idx_vw_distribucion_aplicados_uidx
-ON vw_distribucion_aplicados (cod_matricula, id_usuario);
+
+---------------------------------------------------
+--CREA LA VISTA vw_distribucion_aplicados
+---------------------------------------------------
+--CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON Y SI APLICARON
+-- DE FORMA AGRUPADA POR USUARIO SAP Y NJ
+---------------------------------------------------
+CREATE OR REPLACE VIEW vw_aplicados_agrupados AS
+SELECT
+    sap_user,
+    cod_naturaleza_juridica,
+    naturaleza_juridica,
+    COUNT(*) AS total_registros,
+    COUNT(*) FILTER (WHERE mutacion_aplicada = 'SI') AS total_aplicadas,
+    COUNT(*) FILTER (WHERE mutacion_aplicada = 'NO') AS total_no_aplicadas
+FROM vw_distribucion_aplicados
+GROUP BY sap_user, cod_naturaleza_juridica, naturaleza_juridica
+ORDER BY sap_user, total_registros DESC;
+
 
 ---------------------------------------------------
 --CREA UN SP EN LA BD PARA DISTRIBUIR LAS MUTACIONES...
@@ -411,15 +426,8 @@ BEGIN
         CURRENT_DATE
     FROM asignaciones a
     JOIN tbl_users u ON u.id_user = a.id_usuario;
-
-	--SE NECESITA ACTUALIZAR LA VISTA DE APLICACIONES  
-	REFRESH MATERIALIZED VIEW vw_distribucion_aplicados;
-
 END;
 $BODY$;
-
-
-
 
 
 
