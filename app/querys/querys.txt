@@ -382,7 +382,9 @@ SELECT
     d.*,
     u.name_user
 FROM tbl_distri_mutaciones d
-JOIN tbl_users u ON d.id_usuario = u.id_user;
+JOIN tbl_users u ON d.id_usuario = u.id_user
+WHERE d.fecha_distribucion = (
+        SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones);
 
 
 
