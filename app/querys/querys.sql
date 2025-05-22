@@ -371,6 +371,23 @@ GROUP BY sap_user, cod_naturaleza_juridica, naturaleza_juridica
 ORDER BY sap_user, total_registros DESC;
 
 
+
+---------------------------------------------------
+--CREA LA VISTA vw_consulta_distri_mutaciones
+---------------------------------------------------
+--CONSULTA LA ÚLTIMA DISTRIBUCIÓN DE LAS MUTACIONES
+---------------------------------------------------
+CREATE OR REPLACE VIEW vw_consulta_distri_mutaciones AS
+SELECT 
+    d.*,
+    u.name_user
+FROM tbl_distri_mutaciones d
+JOIN tbl_users u ON d.id_usuario = u.id_user
+WHERE d.fecha_distribucion = (
+        SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones);
+
+
+
 ---------------------------------------------------
 --CREA UN SP EN LA BD PARA DISTRIBUIR LAS MUTACIONES...
 --A LOS USUARIOS SELECCIONADOS DESDE EL FRONTEND
