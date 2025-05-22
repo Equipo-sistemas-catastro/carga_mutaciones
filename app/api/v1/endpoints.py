@@ -8,8 +8,8 @@ from app.services.post_distribucion import generar_csvs_y_enviar
 from app.schemas.registro import UsuarioUUID
 
 from app.db.session import get_db
-from app.models.registro import PlanoTurnoMutacion, DistribucionMutacion, vw_distribucion_aplicados
-from app.schemas.registro import PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones, UsuarioList, DistribucionMutacionOut, vw_distribucion_aplicadosOut
+from app.models.registro import PlanoTurnoMutacion, DistribucionMutacion, vw_distribucion_aplicados, vw_aplicados_agrupados, ConsultaDistriMutaciones
+from app.schemas.registro import PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones, UsuarioList, DistribucionMutacionOut, vw_distribucion_aplicadosOut, vw_aplicados_agrupadosOut, ConsultaDistriMutacionesOut
 from app.crud.registro import get_compara_mutaciones
 from app.crud import registro
 #from app.schemas.paginacion import CustomParams
@@ -19,6 +19,27 @@ from app.schemas.paginacion import CustomPage, CustomParams
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 
 router = APIRouter()
+
+@router.get("/consulta_aplicados_agrupados", response_model=CustomPage[vw_aplicados_agrupadosOut])
+def consulta_aplicados_agrupados(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    query = db.query(vw_aplicados_agrupados)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+
+    page = (skip // limit) + 1 if limit else 1
+    pages = (total + limit - 1) // limit if limit else 1
+
+    return {
+        "total": total,
+        "page": page,
+        "size": limit,
+        "pages": pages,
+        "items": items
+    }
 
 @router.get("/consulta_aplicados", response_model=CustomPage[vw_distribucion_aplicadosOut])
 def consulta_aplicados(
@@ -41,13 +62,13 @@ def consulta_aplicados(
         "items": items
     }
 
-@router.get("/consulta_distribucion_mutaciones", response_model=CustomPage[DistribucionMutacionOut])
+@router.get("/consulta_distribucion_mutaciones", response_model=CustomPage[ConsultaDistriMutacionesOut])
 def consultar_distribucion_mutaciones(
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
-    query = db.query(DistribucionMutacion)
+    query = db.query(ConsultaDistriMutaciones)
     total = query.count()
     items = query.offset(skip).limit(limit).all()
 

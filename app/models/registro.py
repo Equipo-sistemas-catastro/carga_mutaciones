@@ -7,6 +7,17 @@ Base = declarative_base()
 
 SCHEMA=settings.PG_SCHEMA
 
+class vw_aplicados_agrupados(Base):
+    __tablename__ = "vw_aplicados_agrupados"
+    __table_args__ = {"schema": settings.PG_SCHEMA}
+
+    sap_user = Column(String, primary_key=True)
+    cod_naturaleza_juridica = Column(String, primary_key=True)
+    naturaleza_juridica = Column(String)
+    total_registros = Column(Integer)
+    total_aplicadas = Column(Integer)
+    total_no_aplicadas = Column(Integer)
+
 class vw_distribucion_aplicados(Base):
     __tablename__ = "vw_distribucion_aplicados"
     __table_args__ = {"schema": SCHEMA}
@@ -27,6 +38,23 @@ class vw_distribucion_aplicados(Base):
     cd_comprador = Column(String)
     vl_compraventa = Column(Numeric)
     mutacion_aplicada = Column(String)
+
+class ConsultaDistriMutaciones(Base):
+    __tablename__ = "vw_consulta_distri_mutaciones"
+    __table_args__ = {"schema": SCHEMA}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(Text)
+    cod_naturaleza_juridica = Column(Text)
+    naturaleza_juridica = Column(String(100))
+    anio = Column(Integer)
+    mes = Column(Integer)
+    id_usuario = Column(UUID)
+    sap_user = Column(String(100))
+    fecha_distribucion = Column(Date)
+    name_user = Column(String)
 
 class DistribucionMutacion(Base):
     __tablename__ = "tbl_distri_mutaciones"

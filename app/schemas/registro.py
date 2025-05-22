@@ -4,6 +4,17 @@ from typing import Optional, List
 from datetime import datetime, date
 from uuid import UUID
 
+class vw_aplicados_agrupadosOut(BaseModel):
+    sap_user: Optional[str]
+    cod_naturaleza_juridica: Optional[str]
+    naturaleza_juridica: Optional[str]
+    total_registros: int
+    total_aplicadas: int
+    total_no_aplicadas: int
+
+    class Config:
+        model_config = ConfigDict(from_attributes=True)
+
 class vw_distribucion_aplicadosOut(BaseModel):
     cod_matricula: int
     max_fecha_plano: Optional[date]
@@ -24,6 +35,20 @@ class vw_distribucion_aplicadosOut(BaseModel):
 
     class Config:
         model_config = ConfigDict(from_attributes=True)
+
+class ConsultaDistriMutacionesOut(BaseModel):
+    cod_matricula: int
+    max_fecha_plano: Optional[date]
+    max_fecha_sap: Optional[date]
+    id_zre: Optional[str]
+    cod_naturaleza_juridica: Optional[str]
+    naturaleza_juridica: Optional[str]
+    anio: Optional[int]
+    mes: Optional[int]
+    id_usuario: Optional[UUID]
+    sap_user: Optional[str]
+    fecha_distribucion: Optional[date]
+    name_user: Optional[str]
 
 class DistribucionMutacionOut(BaseModel):
     cod_matricula: int
