@@ -32,7 +32,7 @@ def generar_csvs_y_enviar(id_usuarios: list[str]):
 
         registros = db.execute(
             text(f"""
-                SELECT * FROM {PG_SCHEMA}.tbl_distri_mutaciones 
+                SELECT name_user, sap_user, cod_matricula, id_zre, cod_naturaleza_juridica, naturaleza_juridica, max_fecha_plano, max_fecha_sap, fecha_distribucion FROM {PG_SCHEMA}.vw_distri_normalizada  
                 WHERE id_usuario = :id AND fecha_distribucion = CURRENT_DATE
             """),
             {"id": id_usuario}
@@ -52,19 +52,6 @@ def generar_csvs_y_enviar(id_usuarios: list[str]):
         df = pd.DataFrame([dict(row._mapping) for row in registros])
         df.to_excel(filepath, index=False)
 
-        """
-        filename = f"mutaciones_gestionar_{id_usuario}.csv"
-        filepath = os.path.join("temp", filename)
-        os.makedirs("temp", exist_ok=True)
-
-        with open(filepath, "w", newline='', encoding='utf-8') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(registros[0]._mapping.keys())     # encabezados
-            for row in registros:
-                writer.writerow(row._mapping.values())        # valores
-        """
-
-
         enviar_email(correo, filepath, id_usuario)
 
     db.close()
@@ -74,7 +61,7 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
     db: Session = SessionLocal()
     total_registros = db.execute(
         text(f"""
-            SELECT COUNT(*) FROM {PG_SCHEMA}.tbl_distri_mutaciones 
+            SELECT COUNT(*) FROM {PG_SCHEMA}.vw_distri_normalizada  
             WHERE id_usuario = :id AND fecha_distribucion = CURRENT_DATE
         """),
         {"id": id_usuario}
@@ -83,7 +70,7 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
     datos_naturaleza = db.execute(
         text(f"""
             SELECT cod_naturaleza_juridica, naturaleza_juridica, COUNT(*) as cantidad
-            FROM {PG_SCHEMA}.tbl_distri_mutaciones
+            FROM {PG_SCHEMA}.vw_distri_normalizada
             WHERE id_usuario = :id AND fecha_distribucion = CURRENT_DATE
             GROUP BY cod_naturaleza_juridica, naturaleza_juridica
             ORDER BY cantidad DESC
@@ -154,47 +141,6 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
     </body>
     </html>
     """
-
-    cuerpo_html_old = f"""
-    <html>
-    <body>
-        <table align="center" width="600" style="font-family: Arial, sans-serif; border-collapse: collapse; border: 1px solid #ccc;">
-            <tr>
-                <td style="background-color: #00a8e8; padding: 15px; text-align: center;">
-                    <table align="center" style="border-collapse: collapse;">
-                        <tr>
-                            <td style="vertical-align: middle; padding-right: 10px;">
-                                <img src="https://cdnwordpresstest-f0ekdgevcngegudb.z01.azurefd.net/es/wp-content/themes/theme_alcaldia/logos/logo_footer.png" 
-                                    alt="Logo" width="60" height="50">
-                            </td>
-                            <td style="vertical-align: middle;">
-                                <a href="https://www.medellin.gov.co/es/secretaria-gestion-y-control-territorial/" 
-                                style="color: #0033cc; font-size: 18px; text-decoration: none; font-weight: bold;">
-                                    Secretaria de Gestión y Control Territorial
-                                </a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            <tr>
-                    <td style="padding: 20px; text-align: left;">
-                    <p style="font-size: 16px;"><a href="#" style="text-decoration: underline;">Hola!</a></p>
-                    <p>Adjunto encontrarás el archivo con las matrículas que debes gestionar.</p>
-                    <p><a href="#" style="text-decoration: underline;">Total</a> registros: {total_registros}</p>
-                </td>
-            </tr>
-            <tr>
-                <td style="background:#333333;color:white;padding:10px;text-align:center;font-size:10px;">
-                    Equipo de Apoyo a los Sistemas de Información Catastral<br>
-                    Business Plaza, Calle 44a No 55-44, Piso 14<br>
-                    Subsecretaría de Catastro
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
-""" 
 
     name_user = db.execute(
         text(f"SELECT name_user FROM {PG_SCHEMA2}.tbl_users WHERE id_user = :id"),
