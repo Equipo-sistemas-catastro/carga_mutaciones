@@ -193,6 +193,7 @@ INSERT INTO tbl_naturaleza_juridica (id_naturaleza, nm_naturaleza, indicador_fil
 ---------------------------------------------------
 --CREA TABLA DE DISTRIBUCIONES DE MUTACIONES
 ---------------------------------------------------
+/*
 DROP TABLE IF EXISTS tbl_distri_mutaciones;
 CREATE TABLE IF NOT EXISTS tbl_distri_mutaciones
 (
@@ -207,25 +208,25 @@ CREATE TABLE IF NOT EXISTS tbl_distri_mutaciones
     id_usuario UUID NOT NULL,
 	sap_user character varying(100),
     fecha_distribucion date
-)
+)*/
+DROP TABLE IF EXISTS tbl_distri_mutaciones;
+CREATE TABLE IF NOT EXISTS tbl_distri_mutaciones
+(
+    id_distribucion SERIAL PRIMARY KEY,
+    id_matricula INT NOT NULL,
+    id_usuario UUID NOT NULL,
+    fecha_distribucion DATE NOT NULL
+);
 
-CREATE INDEX IF NOT EXISTS idx2_cod_matricula
-    ON tbl_distri_mutaciones USING btree
-    (cod_matricula ASC NULLS LAST)
-    TABLESPACE pg_default;
--- Index: idx2_id_usuario
+CREATE INDEX idx_fecha_distribucion ON tbl_distri_mutaciones(fecha_distribucion);
 
--- DROP INDEX IF EXISTS idx2_id_usuario;
-CREATE INDEX IF NOT EXISTS idx2_id_usuario
-    ON tbl_distri_mutaciones USING btree
-    (id_usuario ASC NULLS LAST)
-    TABLESPACE pg_default;
+CREATE INDEX idx2_cod_matricula ON tbl_distri_mutaciones (id_matricula);
 
--- DROP INDEX IF EXISTS idx2_sap_user;
-CREATE INDEX IF NOT EXISTS idx2_sap_user
-    ON tbl_distri_mutaciones USING btree
-    (sap_user ASC NULLS LAST)
-    TABLESPACE pg_default;
+CREATE INDEX idx2_id_usuario ON tbl_distri_mutaciones (id_usuario);
+
+--CREATE INDEX idx2_sap_user ON tbl_distri_mutaciones (sap_user)
+--    TABLESPACE pg_default;
+
 
 
 ------------------------------------------------------------
@@ -255,13 +256,12 @@ CREATE TABLE IF NOT EXISTS zcatt_compravtas
 
 
 ---------------------------------------------------
---CREA UNA VISTA MATERIALIZADA PARA QUE SEA CONSULTADA
---POR LA API DE PYTHON consulta_mutaciones
+--CREA LA VISTA MATERIALIZADA vw_compara_mutaciones
 ---------------------------------------------------
 --QUERY PARA HACER EL JOIN ENTRE LA TABLA DE POSTGRES 
---DE LOS PLANOS y SAP POR EL CÓDIGO DE MATRÍCULA 
--- TRAE LAS MATRICULAS DE LA TABLA DE LOS PLANOS
--- QUE TIENEN FECHA MAYOR A LA DE SAP zcatt_compravts
+--DE LOS PLANOS Y SAP POR EL CÓDIGO DE MATRÍCULA 
+--TRAE LAS MATRICULAS DE LA TABLA DE LOS PLANOS
+--QUE TIENEN FECHA MAYOR A LA DE SAP zcatt_compravts
 ---------------------------------------------------
 ---------------------------------------------------
 CREATE MATERIALIZED VIEW vw_compara_mutaciones AS
@@ -309,23 +309,94 @@ CREATE UNIQUE INDEX vw_compara_mutaciones_uidx
 ON vw_compara_mutaciones (cod_matricula);
 
 
-
---SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO 
+--SE NECESITA EJECUTAR CADA QUE SE CARGA UN ARCHIVO PLANO Ó SE EJECUTA EL SP sp_distribuir_mutaciones
 REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones
+
+
+---------------------------------------------------
+-- CREA LA VISTA vw_distri_normalizada
+---------------------------------------------------
+-- PARA HACER JOIN CON LA MAESTRA tbl_users, tbl_naturaleza_juridica 
+--(NORMALIZACION DE tbl_distri_mutaciones)
+---------------------------------------------------
+CREATE OR REPLACE VIEW vw_distri_normalizada AS
+SELECT 
+    d.id_distribucion,
+    d.fecha_distribucion,
+    d.id_usuario,
+    u.name_user,
+    u.sap_user,
+    p.cod_matricula,
+    p.id_zre,
+    p.cod_naturaleza_juridica,
+    p.naturaleza_juridica,
+    p.anio,
+    p.mes,
+    p.max_fecha_plano,
+    P.max_fecha_sap
+FROM tbl_distri_mutaciones d
+JOIN tbl_users u ON d.id_usuario = u.id_user
+JOIN vw_compara_mutaciones p ON d.id_matricula = p.cod_matricula
+
+
+
+---------------------------------------------------
+--CREA LA VISTA vw_consulta_distri_mutaciones
+---------------------------------------------------
+--CONSULTA LA ÚLTIMA DISTRIBUCIÓN DE LAS MUTACIONES
+---------------------------------------------------
+CREATE OR REPLACE VIEW vw_consulta_distri_mutaciones AS
+SELECT 
+    u.name_user,
+    d.cod_naturaleza_juridica,
+    d.naturaleza_juridica,
+    COUNT(*) AS total_mutaciones
+FROM vw_distri_normalizada d
+JOIN tbl_users u ON d.id_usuario = u.id_user
+WHERE d.fecha_distribucion = (
+    SELECT MAX(fecha_distribucion) FROM vw_distri_normalizada
+)
+GROUP BY u.name_user, d.cod_naturaleza_juridica, d.naturaleza_juridica
+ORDER BY u.name_user, total_mutaciones DESC;
+
 
 
 ---------------------------------------------------
 --CREA LA VISTA vw_distribucion_aplicados
 ---------------------------------------------------
 --CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON
--- INDICA SI SE APLICARON EN zcatt_compravtas "SI" ó "NO"
+--INDICA SI SE APLICARON EN zcatt_compravtas "SI" ó "NO"
 ---------------------------------------------------
+CREATE OR REPLACE VIEW vw_distribucion_aplicados AS
+SELECT 
+    v.cod_matricula,
+	v.max_fecha_plano,
+	v.max_fecha_sap,
+	v.id_zre,
+	v.cod_naturaleza_juridica,
+	v.naturaleza_juridica,
+	v.anio, 
+	v.mes, 
+	v.id_usuario,
+	v.sap_user,
+	v.fecha_distribucion, 
+	v.name_user,
+    CASE 
+        WHEN v.max_fecha_plano > v.max_fecha_sap THEN 'NO'
+        WHEN v.max_fecha_plano <= v.max_fecha_sap THEN 'SI'
+        ELSE NULL
+    END AS mutacion_aplicada
+FROM vw_distri_normalizada v
+WHERE v.fecha_distribucion = (
+    SELECT MAX(fecha_distribucion) FROM vw_distri_normalizada
+	);
+/*
 CREATE OR REPLACE VIEW vw_distribucion_aplicados AS
 WITH ultima_distribucion AS (
     SELECT *
-    FROM tbl_distri_mutaciones
+    FROM vw_distri_normalizada
     WHERE fecha_distribucion = (
-        SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones
+        SELECT MAX(fecha_distribucion) FROM vw_distri_normalizada
     )
 ),
 ultimas_compraventas AS (
@@ -337,7 +408,6 @@ ultimas_compraventas AS (
 )
 SELECT
     d.*,
-    u.name_user,
     z.fc_mutacion,
     CASE 
         WHEN d.max_fecha_plano > z.fc_mutacion THEN 'NO'
@@ -349,7 +419,7 @@ LEFT JOIN ultimas_compraventas z
     ON d.cod_matricula = z.nm_matricula_pdi
 JOIN tbl_users u
     ON d.id_usuario = u.id_user;
-
+*/
 
 ---------------------------------------------------
 --CREA LA VISTA vw_aplicados_agrupados
@@ -370,31 +440,11 @@ GROUP BY name_user, cod_naturaleza_juridica, naturaleza_juridica
 ORDER BY name_user, total_registros DESC;
 
 
-
----------------------------------------------------
---CREA LA VISTA vw_consulta_distri_mutaciones
----------------------------------------------------
---CONSULTA LA ÚLTIMA DISTRIBUCIÓN DE LAS MUTACIONES
----------------------------------------------------
-CREATE OR REPLACE VIEW vw_consulta_distri_mutaciones AS
-SELECT 
-    u.name_user,
-    d.cod_naturaleza_juridica,
-    d.naturaleza_juridica,
-    COUNT(*) AS total_mutaciones
-FROM tbl_distri_mutaciones d
-JOIN tbl_users u ON d.id_usuario = u.id_user
-WHERE d.fecha_distribucion = (
-    SELECT MAX(fecha_distribucion) FROM tbl_distri_mutaciones
-)
-GROUP BY u.name_user, d.cod_naturaleza_juridica, d.naturaleza_juridica
-ORDER BY u.name_user, total_mutaciones DESC;
-
 ---------------------------------------------------
 --CREA UN SP EN LA BD PARA DISTRIBUIR LAS MUTACIONES...
 --A LOS USUARIOS SELECCIONADOS DESDE EL FRONTEND
 ---------------------------------------------------
-CREATE OR REPLACE PROCEDURE public.sp_distribuir_mutaciones(
+CREATE OR REPLACE PROCEDURE sp_distribuir_mutaciones(
 	IN p_id_usuarios text[])
 LANGUAGE 'plpgsql'
 AS $BODY$
@@ -428,6 +478,14 @@ BEGIN
     ),
     asignaciones AS (
         SELECT 
+            cod_matricula,
+            usuarios_validos[pos_usuario] AS id_usuario
+        FROM numerados
+    )
+    INSERT INTO tbl_distri_mutaciones (id_matricula, id_usuario, fecha_distribucion)
+    SELECT cod_matricula, id_usuario, CURRENT_DATE
+/*
+        SELECT 
             n.*,
             usuarios_validos[n.pos_usuario] AS id_usuario
         FROM numerados n
@@ -443,8 +501,12 @@ BEGIN
         a.anio, a.mes, a.id_usuario,
         u.sap_user,
         CURRENT_DATE
+*/
     FROM asignaciones a
     JOIN tbl_users u ON u.id_user = a.id_usuario;
+
+	REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones;
+	
 END;
 $BODY$;
 

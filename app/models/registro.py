@@ -35,7 +35,6 @@ class vw_distribucion_aplicados(Base):
     sap_user = Column(Text)
     fecha_distribucion = Column(Date)
     name_user = Column(String)
-    fc_mutacion = Column(Date)
     mutacion_aplicada = Column(String)
 
 

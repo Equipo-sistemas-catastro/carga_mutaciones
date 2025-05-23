@@ -28,7 +28,6 @@ class vw_distribucion_aplicadosOut(BaseModel):
     sap_user: Optional[str]
     fecha_distribucion: Optional[date]
     name_user: Optional[str]
-    fc_mutacion: Optional[date]
     mutacion_aplicada: Optional[str]
 
     class Config:

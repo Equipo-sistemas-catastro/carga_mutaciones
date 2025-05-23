@@ -208,6 +208,7 @@ CREATE TABLE IF NOT EXISTS tbl_distri_mutaciones
 	sap_user character varying(100),
     fecha_distribucion date
 )
+CREATE INDEX idx_fecha_distribucion ON tbl_distri_mutaciones(fecha_distribucion);
 
 CREATE INDEX IF NOT EXISTS idx2_cod_matricula
     ON tbl_distri_mutaciones USING btree
