@@ -55,23 +55,6 @@ def procesar_archivos_mutaciones(db: Session):
             mes, anio = extraer_mes_anio(archivo)
             #registros_creados = 0
             registros = []
-
-            """
-            for linea in lineas:
-                campos = {
-                    "id_radicacion": linea[0:15].strip(),
-                    "id_zre": linea[16:22].strip(),
-                    "id_1": linea[23:26].strip(),
-                    "id_2": linea[27:29].strip(),
-                    "id_matricula": linea[30:45].strip(),
-                    "cod_catastral": linea[46:76].strip(),
-                }
-                split_nat = linea[77:398].split('-', 1)
-                campos["cod_naturaleza_juridica"] = split_nat[0].strip()
-                campos["naturaleza_juridica"] = split_nat[1].strip() if len(split_nat) > 1 else ""
-                campos["mes"] = mes
-                campos["ano"] = ano
-                """
             
             for linea in lineas:
                 campos = {
@@ -94,8 +77,6 @@ def procesar_archivos_mutaciones(db: Session):
                 fecha_calculada = datetime(int(anio), int(mes), ultimo_dia).date()
                 campos["fecha_calculada"] = fecha_calculada
 
-                #crear_plano_turno_mutacion(db, PlanoTurnoMutacionCreate(**campos))
-                #registros_creados += 1
                 registros.append(PlanoTurnoMutacion(**campos))
 
             db.bulk_save_objects(registros)
@@ -104,13 +85,9 @@ def procesar_archivos_mutaciones(db: Session):
             # 🔄 Refrescar la vista materializada
             view_name = "vw_compara_mutaciones"
             full_view_name = f"{SCHEMA}.{view_name}"
-            #print(f"Nombre Vista -->: {full_view_name}")
             query = f"REFRESH MATERIALIZED VIEW CONCURRENTLY {full_view_name};"
-            #print(f"REFRESH -->: {query}")
             db.execute(text(query))
             db.commit()
-            #db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones;"))
-            #db.commit()
             
             shutil.move(ruta_completa, os.path.join(CARPETA_EXITOSO, archivo))
             crear_log_carga(db, LogCargaPlanoMutacionCreate(
