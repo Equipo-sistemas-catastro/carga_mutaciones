@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Query, Header, HTTPException, Security
+from fastapi import APIRouter, Depends, Query, Header, UploadFile, File, HTTPException, Security
 from app.core.security import validate_api_key
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import date
 from app.services.distribuir_mutaciones import distribuir_registros
 from app.services.post_distribucion import generar_csvs_y_enviar
+from app.services.cargar_txt import cargar_archivo_txt
 from app.schemas.registro import UsuarioUUID
 
 from app.db.session import get_db
@@ -14,8 +15,40 @@ from app.crud.registro import get_compara_mutaciones
 from app.crud import registro
 from app.schemas.paginacion import CustomPage, CustomParams
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
+from app.exceptions.custom_errors import ArchivoDuplicadoException, CargaFallidaException
+
+
+import shutil, os, tempfile
 
 router = APIRouter()
+
+@router.post("/subir_archivo_txt")
+async def subir_archivo_txt(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename.endswith(".txt"):
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos .txt")
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="wb") as tmp:
+            tmp.write(await file.read())
+            tmp_path = tmp.name
+
+        cargar_archivo_txt(tmp_path, file.filename, db)
+
+        return {"mensaje": "✅ Archivo cargado exitosamente", "archivo": file.filename}
+
+    except ArchivoDuplicadoException as e:
+        raise HTTPException(status_code=409, detail=f"⚠️ {e.mensaje}")
+
+    except CargaFallidaException as e:
+        raise HTTPException(status_code=500, detail=f"❌ {e.mensaje}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"❌ Error inesperado: {str(e)}")
+
+    finally:
+        if 'tmp_path' in locals() and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
 
 @router.get("/consulta_aplicados_agrupados", response_model=CustomPage[vw_aplicados_agrupadosOut])
 def consulta_aplicados_agrupados(

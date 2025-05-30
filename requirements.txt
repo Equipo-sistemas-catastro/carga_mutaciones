@@ -10,3 +10,4 @@ pytest
 fastapi-pagination
 pandas
 openpyxl
+python-multipart
