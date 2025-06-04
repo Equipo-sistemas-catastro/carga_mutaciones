@@ -484,24 +484,6 @@ BEGIN
     )
     INSERT INTO tbl_distri_mutaciones (id_matricula, id_usuario, fecha_distribucion)
     SELECT cod_matricula, id_usuario, CURRENT_DATE
-/*
-        SELECT 
-            n.*,
-            usuarios_validos[n.pos_usuario] AS id_usuario
-        FROM numerados n
-    )
-    INSERT INTO tbl_distri_mutaciones (
-        cod_matricula, max_fecha_plano, max_fecha_sap,
-        id_zre, cod_naturaleza_juridica, naturaleza_juridica,
-        anio, mes, id_usuario, sap_user, fecha_distribucion
-    )
-    SELECT 
-        a.cod_matricula, a.max_fecha_plano, a.max_fecha_sap,
-        a.id_zre, a.cod_naturaleza_juridica, a.naturaleza_juridica,
-        a.anio, a.mes, a.id_usuario,
-        u.sap_user,
-        CURRENT_DATE
-*/
     FROM asignaciones a
     JOIN tbl_users u ON u.id_user = a.id_usuario;
 
