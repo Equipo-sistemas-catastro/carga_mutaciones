@@ -9,8 +9,8 @@ from app.services.cargar_txt import cargar_archivo_txt
 from app.schemas.registro import UsuarioUUID
 
 from app.db.session import get_db
-from app.models.registro import PlanoTurnoMutacion, DistribucionMutacion, vw_distribucion_aplicados, vw_aplicados_agrupados, ConsultaDistriMutaciones
-from app.schemas.registro import PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones, UsuarioList, DistribucionMutacionOut, vw_distribucion_aplicadosOut, vw_aplicados_agrupadosOut, ConsultaDistriMutacionesOut
+from app.models.registro import vw_aplicados_historico_agrupados, vw_aplicados_historico, PlanoTurnoMutacion, DistribucionMutacion, vw_distribucion_aplicados, vw_aplicados_agrupados, ConsultaDistriMutaciones
+from app.schemas.registro import vw_aplicados_historico_agrupadosOut, vw_aplicados_historicoOut, PlanoTurnoMutacionOut, VWComparaMutacionesBase, PaginatedComparaMutaciones, UsuarioList, DistribucionMutacionOut, vw_distribucion_aplicadosOut, vw_aplicados_agrupadosOut, ConsultaDistriMutacionesOut
 from app.crud.registro import get_compara_mutaciones
 from app.crud import registro
 from app.schemas.paginacion import CustomPage, CustomParams
@@ -21,6 +21,48 @@ from app.exceptions.custom_errors import ArchivoDuplicadoException, CargaFallida
 import shutil, os, tempfile
 
 router = APIRouter()
+
+@router.get("/consulta_aplicados_historico_agrupados", response_model=CustomPage[vw_aplicados_historico_agrupadosOut])
+def consulta_aplicados_historico_agrupados(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    query = db.query(vw_aplicados_historico_agrupados)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+
+    page = (skip // limit) + 1 if limit else 1
+    pages = (total + limit - 1) // limit if limit else 1
+
+    return {
+        "total": total,
+        "page": page,
+        "size": limit,
+        "pages": pages,
+        "items": items
+    }
+
+@router.get("/consulta_aplicados_historico", response_model=CustomPage[vw_aplicados_historicoOut])
+def consulta_aplicados_historico(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    query = db.query(vw_aplicados_historico)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+
+    page = (skip // limit) + 1 if limit else 1
+    pages = (total + limit - 1) // limit if limit else 1
+
+    return {
+        "total": total,
+        "page": page,
+        "size": limit,
+        "pages": pages,
+        "items": items
+    }
 
 @router.post("/subir_archivo_txt")
 async def subir_archivo_txt(file: UploadFile = File(...), db: Session = Depends(get_db)):

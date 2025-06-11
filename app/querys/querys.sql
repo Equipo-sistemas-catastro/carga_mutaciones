@@ -364,7 +364,7 @@ ORDER BY u.name_user, total_mutaciones DESC;
 ---------------------------------------------------
 --CREA LA VISTA vw_distribucion_aplicados
 ---------------------------------------------------
---CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON
+--CONSULTA LAS MUTACIONES DE LA ULTIMA DISTRIBUCION
 --INDICA SI SE APLICARON EN zcatt_compravtas "SI" ó "NO"
 ---------------------------------------------------
 CREATE OR REPLACE VIEW vw_distribucion_aplicados AS
@@ -390,36 +390,55 @@ FROM vw_distri_normalizada v
 WHERE v.fecha_distribucion = (
     SELECT MAX(fecha_distribucion) FROM vw_distri_normalizada
 	);
-/*
-CREATE OR REPLACE VIEW vw_distribucion_aplicados AS
-WITH ultima_distribucion AS (
-    SELECT *
-    FROM vw_distri_normalizada
-    WHERE fecha_distribucion = (
-        SELECT MAX(fecha_distribucion) FROM vw_distri_normalizada
-    )
-),
-ultimas_compraventas AS (
-    SELECT DISTINCT ON (nm_matricula_pdi)
-        *
-    FROM zcatt_compravtas
-    WHERE nm_matricula_pdi IS NOT NULL
-    ORDER BY nm_matricula_pdi, fc_mutacion DESC
-)
+
+
+----------------------------------------------------------------
+--CREA LA TABLA tbl_aplicados_historico
+----------------------------------------------------------------
+--PARA ALMACENAR LOS DATOS HISTÓRICOS DE LA GESTIÓN DE LAS 
+--MUTACIONES APLICADAS ANTES DE EJECUTAR UN DISTRIBUCIÓN NUEVA
+----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.tbl_aplicados_historico
+(
+    id_tabla SERIAL PRIMARY KEY,
+	cod_matricula integer,
+    max_fecha_plano date,
+    max_fecha_sap date,
+    id_zre text COLLATE pg_catalog."default",
+    cod_naturaleza_juridica text COLLATE pg_catalog."default",
+    naturaleza_juridica text COLLATE pg_catalog."default",
+    anio integer,
+    mes integer,
+    id_usuario uuid,
+    fecha_distribucion date,
+    mutacion_aplicada text COLLATE pg_catalog."default",
+	fecha_auditoria timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+---------------------------------------------------
+--CREA LA VISTA vw_aplicados_historico
+---------------------------------------------------
+--CONSULTA LAS MUTACIONES QUE SE DISTRIBUYERON Y SI APLICARON
+-- DE FORMA AGRUPADA POR USUARIO SAP Y NJ
+---------------------------------------------------
+CREATE OR REPLACE VIEW vw_aplicados_historico AS
 SELECT
-    d.*,
-    z.fc_mutacion,
-    CASE 
-        WHEN d.max_fecha_plano > z.fc_mutacion THEN 'NO'
-        WHEN d.max_fecha_plano <= z.fc_mutacion THEN 'SI'
-        ELSE NULL
-    END AS mutacion_aplicada
-FROM ultima_distribucion d
-LEFT JOIN ultimas_compraventas z
-    ON d.cod_matricula = z.nm_matricula_pdi
-JOIN tbl_users u
-    ON d.id_usuario = u.id_user;
-*/
+    d.cod_matricula,
+	d.max_fecha_plano,
+	d.max_fecha_sap,
+	d.id_zre,
+	d.cod_naturaleza_juridica,
+	d.naturaleza_juridica,
+	d.anio,
+	d.mes,
+	d.id_usuario,
+	u.sap_user,
+	u.name_user,
+	d.fecha_distribucion,
+	d.mutacion_aplicada
+FROM tbl_aplicados_historico d
+JOIN tbl_users u ON d.id_usuario = u.id_user
+
 
 ---------------------------------------------------
 --CREA LA VISTA vw_aplicados_agrupados
@@ -438,6 +457,27 @@ SELECT
 FROM vw_distribucion_aplicados
 GROUP BY name_user, cod_naturaleza_juridica, naturaleza_juridica
 ORDER BY name_user, total_registros DESC;
+
+
+---------------------------------------------------
+--CREA LA VISTA vw_aplicados_historico_agrupados
+---------------------------------------------------
+--CONSULTA EL HISTÓRICO LAS MUTACIONES QUE SE DISTRIBUYERON Y SI APLICARON
+-- DE FORMA AGRUPADA POR USUARIO SAP Y NJ
+---------------------------------------------------
+CREATE OR REPLACE VIEW vw_aplicados_historico_agrupados AS
+SELECT
+    u.name_user,
+    d.cod_naturaleza_juridica,
+    d.naturaleza_juridica,
+	d.fecha_distribucion,
+    COUNT(d.*) AS total_registros,
+    COUNT(d.*) FILTER (WHERE d.mutacion_aplicada = 'SI') AS total_aplicadas,
+    COUNT(d.*) FILTER (WHERE d.mutacion_aplicada = 'NO') AS total_no_aplicadas
+FROM tbl_aplicados_historico d
+JOIN tbl_users u ON d.id_usuario = u.id_user
+GROUP BY u.name_user, d.cod_naturaleza_juridica, d.naturaleza_juridica, d.fecha_distribucion
+ORDER BY u.name_user, d.fecha_distribucion, total_registros DESC;
 
 
 ---------------------------------------------------
@@ -465,9 +505,44 @@ BEGIN
 
     total_usuarios := array_length(usuarios_validos, 1);
 
-    -- Eliminar registros existentes para la fecha actual
+	-- Eliminar registros existentes para la fecha actual
     DELETE FROM tbl_distri_mutaciones
     WHERE fecha_distribucion = CURRENT_DATE;
+
+	--Guarda el histórico de la gestión de aplicación de las mutaciones
+	--Se valida que no vaya a insertar una fecha_distribucion repetida.
+
+    INSERT INTO tbl_aplicados_historico (
+        cod_matricula,
+        max_fecha_plano,
+        max_fecha_sap,
+        id_zre,
+        cod_naturaleza_juridica,
+        naturaleza_juridica,
+        anio,
+        mes,
+        id_usuario,
+        fecha_distribucion,
+        mutacion_aplicada
+    )
+    SELECT
+        cod_matricula,
+        max_fecha_plano,
+        max_fecha_sap,
+        id_zre,
+        cod_naturaleza_juridica,
+        naturaleza_juridica,
+        anio,
+        mes,
+        id_usuario,
+        fecha_distribucion,
+        mutacion_aplicada
+    FROM vw_distribucion_aplicados v
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM tbl_aplicados_historico h
+        WHERE h.fecha_distribucion = v.fecha_distribucion
+    );
 
     -- Asignar registros desde la vista a los usuarios válidos de forma cíclica
     WITH numerados AS (
@@ -484,29 +559,11 @@ BEGIN
     )
     INSERT INTO tbl_distri_mutaciones (id_matricula, id_usuario, fecha_distribucion)
     SELECT cod_matricula, id_usuario, CURRENT_DATE
-/*
-        SELECT 
-            n.*,
-            usuarios_validos[n.pos_usuario] AS id_usuario
-        FROM numerados n
-    )
-    INSERT INTO tbl_distri_mutaciones (
-        cod_matricula, max_fecha_plano, max_fecha_sap,
-        id_zre, cod_naturaleza_juridica, naturaleza_juridica,
-        anio, mes, id_usuario, sap_user, fecha_distribucion
-    )
-    SELECT 
-        a.cod_matricula, a.max_fecha_plano, a.max_fecha_sap,
-        a.id_zre, a.cod_naturaleza_juridica, a.naturaleza_juridica,
-        a.anio, a.mes, a.id_usuario,
-        u.sap_user,
-        CURRENT_DATE
-*/
     FROM asignaciones a
     JOIN tbl_users u ON u.id_user = a.id_usuario;
 
 	REFRESH MATERIALIZED VIEW CONCURRENTLY vw_compara_mutaciones;
-	
+
 END;
 $BODY$;
 

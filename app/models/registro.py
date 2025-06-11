@@ -8,6 +8,36 @@ Base = declarative_base()
 # Call to Environment Variablesregistro.py
 SCHEMA = settings.PG_SCHEMA
 
+class vw_aplicados_historico_agrupados(Base):
+    __tablename__ = "vw_aplicados_historico_agrupados"
+    __table_args__ = {"schema": settings.PG_SCHEMA}
+
+    name_user = Column(String, primary_key=True)
+    cod_naturaleza_juridica = Column(String, primary_key=True)
+    naturaleza_juridica = Column(String)
+    fecha_distribucion = Column(Date)
+    total_registros = Column(Integer)
+    total_aplicadas = Column(Integer)
+    total_no_aplicadas = Column(Integer)
+
+class vw_aplicados_historico(Base):
+    __tablename__ = "vw_aplicados_historico"
+    __table_args__ = {"schema": SCHEMA}
+
+    cod_matricula = Column(Integer, primary_key=True)
+    max_fecha_plano = Column(Date)
+    max_fecha_sap = Column(Date)
+    id_zre = Column(Text)
+    cod_naturaleza_juridica = Column(Text)
+    naturaleza_juridica = Column(Text)
+    anio = Column(Integer)
+    mes = Column(Integer)
+    id_usuario = Column(UUID)
+    sap_user = Column(String(100))
+    name_user = Column(String)
+    fecha_distribucion = Column(Date)
+    mutacion_aplicada = Column(Text)
+
 class vw_aplicados_agrupados(Base):
     __tablename__ = "vw_aplicados_agrupados"
     __table_args__ = {"schema": settings.PG_SCHEMA}

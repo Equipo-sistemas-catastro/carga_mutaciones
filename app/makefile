@@ -1,5 +1,6 @@
 # Activa el entorno virtual (ajustar si usás otro nombre distinto a "venv")
 VENV = venv/Scripts/activate
+VENV = venv\Scripts\activate
 
 # Comando base para activar entorno en Windows CMD
 ifeq ($(OS),Windows_NT)
