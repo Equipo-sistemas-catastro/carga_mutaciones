@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query, Header, UploadFile, File, HTTPException, Security
-from app.core.security import validate_api_key
+#from app.core.security import validar_api_key
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import date

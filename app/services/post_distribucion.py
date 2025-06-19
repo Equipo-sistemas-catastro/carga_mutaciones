@@ -42,6 +42,7 @@ def generar_csvs_y_enviar(id_usuarios: list[str]):
             continue
 
         correo = resultado.email_user
+        #copia_correo = settings.COPIA_CORREO
         sap_user = resultado.sap_user or f"user_{id_usuario}"  # fallback en caso de nulo
 
         filename = f"mutaciones_gestionar_{sap_user}.xlsx"
@@ -52,11 +53,13 @@ def generar_csvs_y_enviar(id_usuarios: list[str]):
         df = pd.DataFrame([dict(row._mapping) for row in registros])
         df.to_excel(filepath, index=False)
 
+        #enviar_email(correo, copia_correo, filepath, id_usuario)
         enviar_email(correo, filepath, id_usuario)
 
     db.close()
 
 
+#def enviar_email(destinatario, copia_correo, archivo_adj, id_usuario):
 def enviar_email(destinatario, archivo_adj, id_usuario):
     db: Session = SessionLocal()
     total_registros = db.execute(
@@ -151,6 +154,7 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
     msg["Subject"] = f"Mutaciones asignadas - Usuario {name_user}"
     msg["From"] = settings.SMTP_USER
     msg["To"] = destinatario #"nancymaya80@gmail.com""victorge08@gmail.com"
+    #msg["Cc"] = copia_correo
 
     msg.set_content("Este correo contiene información en formato HTML.")
     msg.add_alternative(cuerpo_html, subtype="html")
@@ -166,5 +170,6 @@ def enviar_email(destinatario, archivo_adj, id_usuario):
         smtp.starttls()
         smtp.login(SMTP_USER, SMTP_PASS)
         smtp.send_message(msg)
+        #smtp.send_message(msg, to_addrs=[destinatario, copia_correo])
 
  
