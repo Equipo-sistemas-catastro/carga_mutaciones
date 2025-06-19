@@ -8,9 +8,10 @@ from app.core.config import settings
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-def validate_api_key(api_key: str = Security(api_key_header)):
+def validar_api_key(api_key: str = Security(api_key_header)):
     if api_key != settings.api_key:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="No autorizado: clave inválida"
         )
+

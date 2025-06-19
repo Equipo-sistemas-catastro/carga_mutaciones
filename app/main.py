@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi_pagination import add_pagination
 from fastapi.responses import FileResponse
 from app.api.v1 import endpoints
@@ -7,9 +7,17 @@ from fastapi.openapi.models import APIKey, APIKeyIn, SecuritySchemeType
 from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.security import validar_api_key
 import os
 
-app = FastAPI()
+#app = FastAPI()
+
+# 👇 Configuración de FastAPI
+app = FastAPI(
+    title="API Mutaciones",
+    version="1.0.0",
+    dependencies=[Depends(validar_api_key)]
+)
 
 cors_origins1=settings.cors_origins1
 cors_origins2=settings.cors_origins2
@@ -39,7 +47,7 @@ async def favicon():
     file_path = os.path.join(os.path.dirname(__file__), "static", "favicon.ico")
     return FileResponse(file_path)
 
-"""
+
 # Personaliza el esquema de seguridad para llamar las API
 def custom_openapi():
     if app.openapi_schema:
@@ -72,4 +80,4 @@ def custom_openapi():
     return app.openapi_schema
 
 app.openapi = custom_openapi
-"""
+

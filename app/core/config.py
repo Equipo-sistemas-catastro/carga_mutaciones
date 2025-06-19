@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     SMTP_PORT: str
     SMTP_USER: str
     SMTP_PASS: str
+    COPIA_CORREO: str
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
