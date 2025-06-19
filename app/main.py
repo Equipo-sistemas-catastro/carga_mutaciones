@@ -54,7 +54,7 @@ def custom_openapi():
         return app.openapi_schema
 
     openapi_schema = get_openapi(
-        title="Tu API con API Key",
+        title="API Mutaciones",
         version="1.0.0",
         description="API protegida con API Key en header",
         routes=app.routes,
